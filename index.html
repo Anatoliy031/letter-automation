@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Автоматизация типовых писем</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- SheetJS CDN для работы с Excel -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6fa; margin: 0; }
+    #container { display: flex; min-height: 100vh; }
+    #sidebar { width: 220px; background: #263e5f; color: #fff; padding: 30px 10px 10px 10px; box-shadow: 2px 0 4px rgba(0,0,0,0.03);}
+    #sidebar button { display: block; width: 100%; margin: 10px 0; padding: 12px; background: #385980; border: none; color: #fff; font-size: 16px; border-radius: 7px; cursor: pointer; text-align: left;}
+    #sidebar button.active { background: #21a4e4; font-weight: bold;}
+    #main { flex: 2; padding: 24px; }
+    #right { width: 380px; background: #fff; padding: 20px; border-left: 1px solid #e5e8ee; }
+    .excel-table { width: 100%; border-collapse: collapse; background: #fff; }
+    .excel-table th, .excel-table td { border: 1px solid #d1d9e6; padding: 7px 10px; }
+    .excel-table tr:hover { background: #eaf6ff; cursor: pointer; }
+    #templateArea { min-height: 220px; background: #f7fafd; border: 1px solid #e0e7f4; border-radius: 7px; padding: 15px; margin-bottom: 18px;}
+    #rowInput { margin-bottom: 10px;}
+    #finalLetter { white-space: pre-line; background: #f6f8fb; border-radius: 7px; padding: 18px; font-size: 16px; min-height: 180px; }
+    #uploadExcel { margin-top: 16px;}
+    @media (max-width:900px) { #container { flex-direction: column; } #sidebar, #right { width: 100%;} #main { padding: 10px;} }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <!-- Левая панель — типовые письма -->
+    <div id="sidebar">
+      <h3>Типовые письма</h3>
+      <button onclick="selectTemplate('Актуализация ТУ')" id="btn-0">Актуализация ТУ</button>
+      <button onclick="selectTemplate('Допуск персонала')" id="btn-1">Допуск персонала</button>
+      <button onclick="selectTemplate('Письмо о корректировки ТУ')" id="btn-2">Письмо о корректировки ТУ</button>
+      <button onclick="selectTemplate('Сведения о ВЛ')" id="btn-3">Сведения о ВЛ</button>
+      <button onclick="selectTemplate('ППР')" id="btn-4">ППР</button>
+      <button onclick="selectTemplate('Подготовка ТУ')" id="btn-5">Подготовка ТУ</button>
+      <button onclick="selectTemplate('Факт о выполнении ТУ')" id="btn-6">Факт о выполнении ТУ</button>
+      <button onclick="selectTemplate('Согласование ПД')" id="btn-7">Согласование ПД</button>
+    </div>
+    <!-- Центр — таблица Excel -->
+    <div id="main">
+      <h3>Реестр (Excel)</h3>
+      <input type="file" id="uploadExcel" accept=".xlsx, .xls"/>
+      <div id="tableArea"></div>
+    </div>
+    <!-- Правая часть — выбор строки и шаблон письма -->
+    <div id="right">
+      <h3>Форма письма</h3>
+      <div id="templateArea">Выберите тип письма и строку из реестра.</div>
+      <input type="number" id="rowInput" placeholder="Введите номер строки Excel" min="2" style="width: 100%;">
+      <button onclick="generateLetter()" style="width: 100%; margin-bottom:15px;">Сформировать письмо</button>
+      <div id="finalLetter"></div>
+    </div>
+  </div>
+  <script>
+    // Примеры шаблонов писем (замени на свои из Word, отформатируй под нужный вид!)
+    const templates = {
+      "Актуализация ТУ": "Уважаемые коллеги!\nПрошу вас актуализировать ТУ по объекту: {Объект}.\nНомер договора: {Договор}\nСрок: {Срок}\n\nС уважением,\n{Ответственный}",
+      "Допуск персонала": "Прошу допустить персонал {ФИО} к объекту {Объект} по заявке {Заявка}.\nДата: {Дата}\n\nС уважением,\n{Ответственный}",
+      "Письмо о корректировки ТУ": "Прошу внести корректировки в ТУ по объекту {Объект}.\nСтарая дата: {Дата1}, новая дата: {Дата2}.\nПричина: {Причина}\n\nС уважением,\n{Ответственный}",
+      "Сведения о ВЛ": "Направляю сведения о ВЛ: {ВЛ}\nАдрес: {Адрес}\n\nС уважением,\n{Ответственный}",
+      "ППР": "В рамках подготовки ППР по объекту {Объект} сообщаю: {Сообщение}\n\nС уважением,\n{Ответственный}",
+      "Подготовка ТУ": "Прошу подготовить ТУ для {Объект}.\nКонтактное лицо: {Контакт}\n\nС уважением,\n{Ответственный}",
+      "Факт о выполнении ТУ": "Сообщаю о выполнении ТУ по объекту {Объект}.\nДата выполнения: {Дата}\n\nС уважением,\n{Ответственный}",
+      "Согласование ПД": "Прошу согласовать ПД по объекту {Объект}.\nОтветственный: {Ответственный}\n\nС уважением,\n{Ответственный}",
+    };
+    let currentTemplate = '';
+    let excelData = [];
+    let headers = [];
+    // 1. Выбор шаблона
+    function selectTemplate(name) {
+      currentTemplate = name;
+      // Подсветка кнопки
+      document.querySelectorAll('#sidebar button').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`#sidebar button[onclick="selectTemplate('${name}')"]`).classList.add('active');
+      document.getElementById('templateArea').innerText = templates[name] || 'Нет шаблона';
+      document.getElementById('finalLetter').innerText = '';
+    }
+    // 2. Загрузка и отображение Excel-файла
+    document.getElementById('uploadExcel').addEventListener('change', handleExcel, false);
+    function handleExcel(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type:'array'});
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(firstSheet, {header:1});
+        // Первую строку — заголовки
+        headers = json[0];
+        excelData = json.slice(1);
+        renderTable();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+    // 3. Рисуем таблицу
+    function renderTable() {
+      let html = `<table class="excel-table"><tr>`;
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += `</tr>`;
+      excelData.forEach((row, idx) => {
+        html += `<tr onclick="selectRow(${idx})">`;
+        headers.forEach((h,j) => html += `<td>${row[j]||''}</td>`);
+        html += `</tr>`;
+      });
+      html += `</table>`;
+      document.getElementById('tableArea').innerHTML = html;
+    }
+    // 4. Выбор строки по клику
+    function selectRow(idx) {
+      document.getElementById('rowInput').value = idx+2; // Excel row (с учетом заголовка)
+      generateLetter();
+    }
+    // 5. Формирование письма
+    function generateLetter() {
+      if (!currentTemplate) {
+        alert('Выберите тип письма!');
+        return;
+      }
+      const rowNum = parseInt(document.getElementById('rowInput').value);
+      if (isNaN(rowNum) || rowNum < 2 || rowNum-2 >= excelData.length) {
+        alert('Введите корректный номер строки из реестра!');
+        return;
+      }
+      const row = excelData[rowNum-2];
+      let letter = templates[currentTemplate];
+      headers.forEach((h, j) => {
+        // Подстановка {Поле} в шаблоне на данные из Excel
+        const regex = new RegExp(`{${h}}`, 'g');
+        letter = letter.replace(regex, row[j]||'');
+      });
+      document.getElementById('finalLetter').innerText = letter;
+    }
+  </script>
+</body>
+</html>
