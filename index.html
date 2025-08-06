@@ -12,18 +12,17 @@
     #sidebar button { display: block; width: 100%; margin: 10px 0; padding: 12px; background: #385980; border: none; color: #fff; font-size: 16px; border-radius: 7px; cursor: pointer; text-align: left;}
     #sidebar button.active { background: #21a4e4; font-weight: bold;}
     #main { flex: 2; padding: 24px; }
-    #right { width: 520px; background: #fff; padding: 20px; border-left: 1px solid #e5e8ee; overflow-x:auto;}
+    #right { width: 580px; background: #fff; padding: 20px; border-left: 1px solid #e5e8ee; overflow-x:auto;}
     .excel-table { width: 100%; border-collapse: collapse; background: #fff; }
     .excel-table th, .excel-table td { border: 1px solid #d1d9e6; padding: 7px 10px; }
     .excel-table tr:hover { background: #eaf6ff; cursor: pointer; }
     #templateArea { min-height: 180px; background: #f7fafd; border: 1px solid #e0e7f4; border-radius: 7px; padding: 15px; margin-bottom: 18px; }
     #rowInput { margin-bottom: 10px;}
     #finalLetter { background: #f6f8fb; border-radius: 7px; padding: 18px; font-size: 16px; min-height: 180px; border: 1px solid #e0e7f4; margin-top:12px;}
-    #uploadExcel, #loadGoogleSheetBtn { margin-top: 16px;}
     @media (max-width:1100px) { #container { flex-direction: column; } #sidebar, #right { width: 100%;} #main { padding: 10px;} }
-    #sheetLinkInput {width:100%;padding:5px;margin-bottom:12px;}
     .letter-html table { border-collapse: collapse; }
     .letter-html th, .letter-html td { border:1px solid #d1d9e6; padding: 5px 8px; }
+    #tableArea {max-height:400px;overflow-y:auto;margin-bottom:15px;}
   </style>
 </head>
 <body>
@@ -33,18 +32,15 @@
       <h3>Шаблоны писем</h3>
       <div id="templatesList">Загрузка...</div>
     </div>
-    <!-- Центр — таблица Google Sheets -->
-    <div id="main">
-      <h3>Реестр (Google Таблица)</h3>
-      <input type="text" id="sheetLinkInput" placeholder="Вставь ссылку на Google Таблицу или её ID">
-      <button id="loadGoogleSheetBtn" onclick="loadGoogleSheet()">Загрузить таблицу</button>
-      <div id="tableArea"></div>
-    </div>
-    <!-- Правая часть — выбор строки и шаблон письма -->
+    <!-- Центр убран, теперь реестр справа -->
+    <div id="main" style="display:none;"></div>
+    <!-- Правая часть — реестр и письмо -->
     <div id="right">
+      <h3>Реестр заявок</h3>
+      <div id="tableArea"></div>
       <h3>Форма письма</h3>
       <div id="templateArea" class="letter-html">Выберите шаблон письма и строку из реестра.</div>
-      <input type="number" id="rowInput" placeholder="Введите номер строки" min="2" style="width: 100%;">
+      <input type="number" id="rowInput" placeholder="Введите номер строки" min="2" style="width: 100%;margin-bottom: 8px;">
       <button onclick="generateLetter()" style="width: 100%; margin-bottom:15px;">Сформировать письмо</button>
       <div id="finalLetter" class="letter-html"></div>
     </div>
@@ -55,15 +51,17 @@
     const GITHUB_REPO = "letter-automation";
     const GITHUB_TEMPLATES_FOLDER = "templates";
 
-    // --- 1. Загрузка списка шаблонов из GitHub ---
-    let templatesMeta = [];    // [{name, url, raw_url}]
+    // --- Постоянная ссылка на Google-таблицу ---
+    // Используй только ID!
+    const GOOGLE_SHEET_ID = "1-P3T-ik_gU7qrr0KGDFbxQ80F70_Z8K5QT4siN31Or4";
+
+    let templatesMeta = [];
     let currentTemplateName = '';
     let currentTemplateContent = '';
     let excelData = [];
     let headers = [];
-    let googleSheetUrl = '';
 
-    // Загрузка списка файлов-шаблонов из GitHub
+    // --- 1. Загрузка списка шаблонов из GitHub ---
     async function fetchTemplatesList() {
       const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
       const res = await fetch(apiUrl);
@@ -72,7 +70,6 @@
         return;
       }
       const files = await res.json();
-      // Оставляем только .html (а можно и .txt, .md — расширь если нужно)
       templatesMeta = files.filter(f => /\.html$/i.test(f.name));
       renderTemplatesList();
     }
@@ -89,11 +86,9 @@
     async function selectTemplate(name) {
       currentTemplateName = name;
       currentTemplateContent = '';
-      // Подсветка
       document.querySelectorAll('#templatesList button').forEach(btn => btn.classList.remove('active'));
       const idx = templatesMeta.findIndex(t=>t.name===name);
       if (idx>=0) document.getElementById(`tplbtn-${idx}`).classList.add('active');
-      // RAW url
       const rawUrl = templatesMeta[idx].download_url;
       const res = await fetch(rawUrl);
       if (!res.ok) {
@@ -106,22 +101,9 @@
       document.getElementById('finalLetter').innerHTML = '';
     }
 
-    // --- 3. Загрузка Google Таблицы ---
+    // --- 3. Автоматическая загрузка Google-таблицы ---
     async function loadGoogleSheet() {
-      let url = document.getElementById('sheetLinkInput').value.trim();
-      if (!url) {
-        alert('Вставьте ссылку на Google Таблицу или её ID!');
-        return;
-      }
-      // Поддержка ID или URL
-      let sheetId = '';
-      if (/docs.google.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/.test(url)) {
-        sheetId = url.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
-      } else {
-        sheetId = url;
-      }
-      googleSheetUrl = sheetId;
-      // Получаем CSV из первой вкладки
+      let sheetId = GOOGLE_SHEET_ID;
       let csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
       const res = await fetch(csvUrl);
       if (!res.ok) {
@@ -129,7 +111,6 @@
         return;
       }
       const csv = await res.text();
-      // Используем SheetJS для парсинга
       const workbook = XLSX.read(csv, {type:'string'});
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(firstSheet, {header:1});
@@ -169,18 +150,16 @@
       }
       const row = excelData[rowNum-2];
       let letter = currentTemplateContent;
-
-      // Подстановка всех {Поле} значений
       headers.forEach((h, j) => {
         const regex = new RegExp(`{${h}}`, 'g');
         letter = letter.replace(regex, row[j]||'');
       });
-
       document.getElementById('finalLetter').innerHTML = letter;
     }
 
-    // Загрузка шаблонов при старте
+    // --- Запуск ---
     fetchTemplatesList();
+    loadGoogleSheet();
   </script>
 </body>
 </html>
