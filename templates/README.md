@@ -1,1 +1,1 @@
-templates/README.md
+Шаблоны писем
