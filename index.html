@@ -12,16 +12,18 @@
     #sidebar button { display: block; width: 100%; margin: 10px 0; padding: 12px; background: #385980; border: none; color: #fff; font-size: 16px; border-radius: 7px; cursor: pointer; text-align: left;}
     #sidebar button.active { background: #21a4e4; font-weight: bold;}
     #main { flex: 2; padding: 24px; }
-    #right { width: 380px; background: #fff; padding: 20px; border-left: 1px solid #e5e8ee; }
+    #right { width: 520px; background: #fff; padding: 20px; border-left: 1px solid #e5e8ee; overflow-x:auto;}
     .excel-table { width: 100%; border-collapse: collapse; background: #fff; }
     .excel-table th, .excel-table td { border: 1px solid #d1d9e6; padding: 7px 10px; }
     .excel-table tr:hover { background: #eaf6ff; cursor: pointer; }
-    #templateArea { min-height: 220px; background: #f7fafd; border: 1px solid #e0e7f4; border-radius: 7px; padding: 15px; margin-bottom: 18px;}
+    #templateArea { min-height: 180px; background: #f7fafd; border: 1px solid #e0e7f4; border-radius: 7px; padding: 15px; margin-bottom: 18px; }
     #rowInput { margin-bottom: 10px;}
-    #finalLetter { white-space: pre-line; background: #f6f8fb; border-radius: 7px; padding: 18px; font-size: 16px; min-height: 180px; }
+    #finalLetter { background: #f6f8fb; border-radius: 7px; padding: 18px; font-size: 16px; min-height: 180px; border: 1px solid #e0e7f4; margin-top:12px;}
     #uploadExcel, #loadGoogleSheetBtn { margin-top: 16px;}
-    @media (max-width:900px) { #container { flex-direction: column; } #sidebar, #right { width: 100%;} #main { padding: 10px;} }
+    @media (max-width:1100px) { #container { flex-direction: column; } #sidebar, #right { width: 100%;} #main { padding: 10px;} }
     #sheetLinkInput {width:100%;padding:5px;margin-bottom:12px;}
+    .letter-html table { border-collapse: collapse; }
+    .letter-html th, .letter-html td { border:1px solid #d1d9e6; padding: 5px 8px; }
   </style>
 </head>
 <body>
@@ -41,10 +43,10 @@
     <!-- Правая часть — выбор строки и шаблон письма -->
     <div id="right">
       <h3>Форма письма</h3>
-      <div id="templateArea">Выберите шаблон письма и строку из реестра.</div>
+      <div id="templateArea" class="letter-html">Выберите шаблон письма и строку из реестра.</div>
       <input type="number" id="rowInput" placeholder="Введите номер строки" min="2" style="width: 100%;">
       <button onclick="generateLetter()" style="width: 100%; margin-bottom:15px;">Сформировать письмо</button>
-      <div id="finalLetter"></div>
+      <div id="finalLetter" class="letter-html"></div>
     </div>
   </div>
   <script>
@@ -70,15 +72,15 @@
         return;
       }
       const files = await res.json();
-      // Оставляем только .txt, .html, .md
-      templatesMeta = files.filter(f => /\.(txt|html|md)$/i.test(f.name));
+      // Оставляем только .html (а можно и .txt, .md — расширь если нужно)
+      templatesMeta = files.filter(f => /\.html$/i.test(f.name));
       renderTemplatesList();
     }
 
     function renderTemplatesList() {
       let html = '';
       templatesMeta.forEach((tpl, idx) => {
-        html += `<button onclick="selectTemplate('${tpl.name}')" id="tplbtn-${idx}">${tpl.name.replace(/\.[^.]+$/, '')}</button>`;
+        html += `<button onclick="selectTemplate('${tpl.name}')" id="tplbtn-${idx}">${tpl.name.replace(/\.html$/i, '')}</button>`;
       });
       document.getElementById('templatesList').innerHTML = html || 'Нет шаблонов';
     }
@@ -100,8 +102,8 @@
       }
       const text = await res.text();
       currentTemplateContent = text;
-      document.getElementById('templateArea').innerText = text;
-      document.getElementById('finalLetter').innerText = '';
+      document.getElementById('templateArea').innerHTML = text;
+      document.getElementById('finalLetter').innerHTML = '';
     }
 
     // --- 3. Загрузка Google Таблицы ---
@@ -167,11 +169,14 @@
       }
       const row = excelData[rowNum-2];
       let letter = currentTemplateContent;
+
+      // Подстановка всех {Поле} значений
       headers.forEach((h, j) => {
         const regex = new RegExp(`{${h}}`, 'g');
         letter = letter.replace(regex, row[j]||'');
       });
-      document.getElementById('finalLetter').innerText = letter;
+
+      document.getElementById('finalLetter').innerHTML = letter;
     }
 
     // Загрузка шаблонов при старте
