@@ -66,14 +66,6 @@
       overflow-y: auto;
     }
     #right h3 { font-size: 16px; margin-bottom: 10px; font-weight: 600; }
-    #searchInput {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
     .excel-table {
       width: 100%;
       border-collapse: collapse;
@@ -99,19 +91,15 @@
       font-size: 13px;
       overflow-x: auto;
     }
-    #editTemplateArea {
+    #rowInput {
       width: 100%;
-      min-height: 150px;
-      background: var(--bg-light);
+      padding: 8px;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 10px;
       font-size: 13px;
-      resize: vertical;
-      display: none;
+      margin-bottom: 10px;
     }
-    #editTemplateButton, #applyEditButton, #generateButton, #copyButton {
+    #generateButton, #copyButton {
       width: 100%;
       padding: 10px;
       background: var(--primary);
@@ -123,7 +111,7 @@
       margin-bottom: 10px;
       transition: background 0.2s;
     }
-    #editTemplateButton:hover, #applyEditButton:hover, #generateButton:hover, #copyButton:hover { background: #1557b0; }
+    #generateButton:hover, #copyButton:hover { background: #1557b0; }
     #finalLetter {
       min-height: 150px;
       background: var(--bg-light);
@@ -151,7 +139,7 @@
       #toggleSidebar { display: block; }
       #right { padding: 10px; }
       #tableArea { max-height: 200px; }
-      #templateArea, #editTemplateArea, #finalLetter { min-height: 120px; }
+      #templateArea, #finalLetter { min-height: 120px; }
     }
   </style>
 </head>
@@ -165,13 +153,9 @@
     <div id="main"></div>
     <div id="right">
       <h3>Реестр заявок</h3>
-      <input type="text" id="searchInput" placeholder="Поиск по реестру..." oninput="searchTable()">
       <div id="tableArea"></div>
       <h3>Форма письма</h3>
       <div id="templateArea" class="letter-html">Выберите шаблон письма и строку из реестра.</div>
-      <button id="editTemplateButton" onclick="toggleEditTemplate()" style="display: none;">Редактировать шаблон</button>
-      <textarea id="editTemplateArea"></textarea>
-      <button id="applyEditButton" onclick="applyTemplateEdit()" style="display: none;">Применить изменения</button>
       <input type="number" id="rowInput" placeholder="Введите номер строки реестра" min="2">
       <button id="generateButton" onclick="generateLetter()">Сформировать письмо</button>
       <div id="errorArea" class="error"></div>
@@ -191,37 +175,11 @@
     let currentTemplateContent = '';
     let excelData = [];
     let headers = [];
-    let filteredData = [];
 
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('visible');
       sidebar.classList.toggle('hidden');
-    }
-
-    function toggleEditTemplate() {
-      const editArea = document.getElementById('editTemplateArea');
-      const applyButton = document.getElementById('applyEditButton');
-      const templateArea = document.getElementById('templateArea');
-      if (editArea.style.display === 'none') {
-        editArea.value = currentTemplateContent;
-        editArea.style.display = 'block';
-        applyButton.style.display = 'block';
-        templateArea.style.display = 'none';
-      } else {
-        editArea.style.display = 'none';
-        applyButton.style.display = 'none';
-        templateArea.style.display = 'block';
-      }
-    }
-
-    function applyTemplateEdit() {
-      const editArea = document.getElementById('editTemplateArea');
-      currentTemplateContent = editArea.value;
-      document.getElementById('templateArea').innerHTML = currentTemplateContent;
-      document.getElementById('finalLetter').innerHTML = '';
-      document.getElementById('copyButton').style.display = 'none';
-      toggleEditTemplate();
     }
 
     async function fetchTemplatesList() {
@@ -258,13 +216,9 @@
         const text = await res.text();
         currentTemplateContent = text;
         document.getElementById('templateArea').innerHTML = text;
-        document.getElementById('editTemplateButton').style.display = 'block';
         document.getElementById('finalLetter').innerHTML = '';
         document.getElementById('copyButton').style.display = 'none';
         document.getElementById('errorArea').innerText = '';
-        document.getElementById('editTemplateArea').style.display = 'none';
-        document.getElementById('applyEditButton').style.display = 'none';
-        document.getElementById('templateArea').style.display = 'block';
       } catch (e) {
         document.getElementById('templateArea').innerText = 'Ошибка загрузки шаблона';
       }
@@ -281,35 +235,21 @@
         const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
         headers = json[0];
         excelData = json.slice(1);
-        filteredData = [...excelData];
         renderTable();
       } catch (e) {
         document.getElementById('tableArea').innerHTML = 'Ошибка загрузки таблицы';
       }
     }
 
-    function searchTable() {
-      const searchInput = document.getElementById('searchInput').value.toLowerCase();
-      filteredData = excelData.filter(row =>
-        row.some(cell => (cell || '').toString().toLowerCase().includes(searchInput))
-      );
-      renderTable();
-    }
-
     function renderTable() {
       let html = `<table class="excel-table"><tr>`;
       headers.forEach(h => html += `<th>${h}</th>`);
       html += `</tr>`;
-      if (filteredData.length === 0) {
-        html += `<tr><td colspan="${headers.length}" style="text-align: center;">Нет результатов</td></tr>`;
-      } else {
-        filteredData.forEach((row, idx) => {
-          const originalIdx = excelData.indexOf(row);
-          html += `<tr onclick="selectRow(${originalIdx})" class="${document.getElementById('rowInput').value - 2 === originalIdx ? 'selected' : ''}">`;
-          headers.forEach((h, j) => html += `<td>${row[j] || ''}</td>`);
-          html += `</tr>`;
-        });
-      }
+      excelData.forEach((row, idx) => {
+        html += `<tr onclick="selectRow(${idx})" class="${document.getElementById('rowInput').value - 2 === idx ? 'selected' : ''}">`;
+        headers.forEach((h, j) => html += `<td>${row[j] || ''}</td>`);
+        html += `</tr>`;
+      });
       html += `</table>`;
       document.getElementById('tableArea').innerHTML = html;
     }
