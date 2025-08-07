@@ -201,25 +201,36 @@
     async function fetchTemplatesList() {
       try {
         const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
+        console.log('Запрос к GitHub API:', apiUrl);
         const res = await fetch(apiUrl, {
           headers: {
             'Accept': 'application/vnd.github.v3+json',
             'Cache-Control': 'no-cache'
-          }
+          },
+          cache: 'no-cache'
         });
         if (!res.ok) {
-          throw new Error(`HTTP ошибка: ${res.status} ${res.statusText}`);
+          const errorText = await res.text();
+          if (res.status === 403) {
+            throw new Error(`Превышен лимит запросов к GitHub API (60 в час). Попробуйте позже или используйте токен доступа.`);
+          }
+          throw new Error(`HTTP ошибка: ${res.status} ${res.statusText}. Подробности: ${errorText}`);
         }
         const files = await res.json();
+        console.log('Ответ от GitHub API:', files);
         templatesMeta = files.filter(f => /\.html$/i.test(f.name));
         if (templatesMeta.length === 0) {
-          document.getElementById('templatesList').innerHTML = 'Шаблоны не найдены';
-        } else {
-          renderTemplatesList();
+          document.getElementById('templatesList').innerHTML = 'Шаблоны не найдены в репозитории. Проверьте, что папка "templates" в репозитории https://github.com/anatoliy031/letter-automation содержит файлы .html';
+          // Fallback: тестовые шаблоны
+          templatesMeta = [
+            { name: 'template1.html', download_url: '' },
+            { name: 'template2.html', download_url: '' }
+          ];
         }
+        renderTemplatesList();
       } catch (e) {
         console.error('Ошибка загрузки шаблонов:', e);
-        document.getElementById('templatesList').innerHTML = 'Ошибка загрузки шаблонов. Проверьте консоль для деталей.';
+        document.getElementById('templatesList').innerHTML = `Ошибка загрузки шаблонов: ${e.message}. Проверьте консоль (F12) и убедитесь, что репозиторий https://github.com/anatoliy031/letter-automation доступен.`;
       }
     }
 
@@ -239,8 +250,12 @@
         const idx = templatesMeta.findIndex(t => t.name === name);
         if (idx >= 0) document.getElementById(`tplbtn-${idx}`).classList.add('active');
         const rawUrl = templatesMeta[idx].download_url;
+        if (!rawUrl) {
+          throw new Error('Шаблон недоступен (используется тестовый шаблон)');
+        }
+        console.log('Запрос шаблона:', rawUrl);
         const res = await fetch(rawUrl, { cache: 'no-cache' });
-        if (!res.ok) throw new Error(`Не удалось загрузить шаблон: ${res.status}`);
+        if (!res.ok) throw new Error(`Не удалось загрузить шаблон: ${res.status} ${res.statusText}`);
         const text = await res.text();
         currentTemplateContent = text;
         document.getElementById('templateArea').innerHTML = text;
@@ -250,15 +265,16 @@
         document.getElementById('errorArea').innerText = '';
       } catch (e) {
         console.error('Ошибка загрузки шаблона:', e);
-        document.getElementById('templateArea').innerText = 'Ошибка загрузки шаблона';
+        document.getElementById('templateArea').innerText = `Ошибка загрузки шаблона: ${e.message}`;
       }
     }
 
     async function loadGoogleSheet() {
       try {
         const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv`;
+        console.log('Запрос к Google Sheets:', csvUrl);
         const res = await fetch(csvUrl, { cache: 'no-cache' });
-        if (!res.ok) throw new Error('Не удалось загрузить таблицу');
+        if (!res.ok) throw new Error(`Не удалось загрузить таблицу: ${res.status} ${res.statusText}`);
         const csv = await res.text();
         const workbook = XLSX.read(csv, { type: 'string' });
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -269,7 +285,7 @@
         renderTable();
       } catch (e) {
         console.error('Ошибка загрузки таблицы:', e);
-        document.getElementById('tableArea').innerHTML = 'Ошибка загрузки таблицы';
+        document.getElementById('tableArea').innerHTML = `Ошибка загрузки таблицы: ${e.message}`;
       }
     }
 
