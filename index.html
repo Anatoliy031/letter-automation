@@ -29,8 +29,9 @@
       box-shadow: 2px 0 8px rgba(0,0,0,0.1);
       overflow-y: auto;
       transition: transform 0.3s ease;
+      display: block;
     }
-    #sidebar.hidden { transform: translateX(-100%); }
+    #sidebar.hidden { transform: translateX(-100%); display: none; }
     #sidebar h3 { font-size: 16px; margin-bottom: 10px; font-weight: 600; }
     #sidebar button {
       width: 100%;
@@ -145,8 +146,9 @@
         height: 100%;
         z-index: 10;
         transform: translateX(-100%);
+        display: none;
       }
-      #sidebar.visible { transform: translateX(0); }
+      #sidebar.visible { transform: translateX(0); display: block; }
       #toggleSidebar { display: block; }
       #right { width: 100%; padding: 10px; }
       #tableArea { max-height: 200px; }
@@ -157,7 +159,7 @@
 <body>
   <button id="toggleSidebar" onclick="toggleSidebar()">☰ Шаблоны</button>
   <div id="container">
-    <div id="sidebar" class="hidden">
+    <div id="sidebar">
       <h3>Шаблоны писем</h3>
       <div id="templatesList">Загрузка...</div>
     </div>
@@ -199,13 +201,25 @@
     async function fetchTemplatesList() {
       try {
         const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
-        const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error('Не удалось загрузить шаблоны');
+        const res = await fetch(apiUrl, {
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP ошибка: ${res.status} ${res.statusText}`);
+        }
         const files = await res.json();
         templatesMeta = files.filter(f => /\.html$/i.test(f.name));
-        renderTemplatesList();
+        if (templatesMeta.length === 0) {
+          document.getElementById('templatesList').innerHTML = 'Шаблоны не найдены';
+        } else {
+          renderTemplatesList();
+        }
       } catch (e) {
-        document.getElementById('templatesList').innerHTML = 'Ошибка загрузки шаблонов';
+        console.error('Ошибка загрузки шаблонов:', e);
+        document.getElementById('templatesList').innerHTML = 'Ошибка загрузки шаблонов. Проверьте консоль для деталей.';
       }
     }
 
@@ -225,8 +239,8 @@
         const idx = templatesMeta.findIndex(t => t.name === name);
         if (idx >= 0) document.getElementById(`tplbtn-${idx}`).classList.add('active');
         const rawUrl = templatesMeta[idx].download_url;
-        const res = await fetch(rawUrl);
-        if (!res.ok) throw new Error('Не удалось загрузить шаблон');
+        const res = await fetch(rawUrl, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`Не удалось загрузить шаблон: ${res.status}`);
         const text = await res.text();
         currentTemplateContent = text;
         document.getElementById('templateArea').innerHTML = text;
@@ -235,6 +249,7 @@
         document.getElementById('downloadWordButton').style.display = 'none';
         document.getElementById('errorArea').innerText = '';
       } catch (e) {
+        console.error('Ошибка загрузки шаблона:', e);
         document.getElementById('templateArea').innerText = 'Ошибка загрузки шаблона';
       }
     }
@@ -242,7 +257,7 @@
     async function loadGoogleSheet() {
       try {
         const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv`;
-        const res = await fetch(csvUrl);
+        const res = await fetch(csvUrl, { cache: 'no-cache' });
         if (!res.ok) throw new Error('Не удалось загрузить таблицу');
         const csv = await res.text();
         const workbook = XLSX.read(csv, { type: 'string' });
@@ -253,6 +268,7 @@
         filteredData = [...excelData];
         renderTable();
       } catch (e) {
+        console.error('Ошибка загрузки таблицы:', e);
         document.getElementById('tableArea').innerHTML = 'Ошибка загрузки таблицы';
       }
     }
@@ -338,6 +354,9 @@
         const now = new Date();
         const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
         saveAs(blob, `Letter_${timestamp}.docx`);
+      }).catch(e => {
+        console.error('Ошибка создания DOCX:', e);
+        document.getElementById('errorArea').innerText = 'Ошибка при создании файла Word';
       });
     }
 
@@ -345,10 +364,13 @@
       const children = [];
       for (const node of element.childNodes) {
         if (node.nodeType === Node.TEXT_NODE) {
-          children.push(new docx.Paragraph({
-            children: [new docx.TextRun(node.textContent.trim())],
-            spacing: { after: 200 }
-          }));
+          const text = node.textContent.trim();
+          if (text) {
+            children.push(new docx.Paragraph({
+              children: [new docx.TextRun(text)],
+              spacing: { after: 200 }
+            }));
+          }
         } else if (node.nodeType === Node.ELEMENT_NODE) {
           if (node.tagName === 'P') {
             children.push(new docx.Paragraph({
@@ -388,21 +410,23 @@
     }
 
     // Инициализация: скрыть боковую панель на мобильных устройствах
-    if (window.innerWidth <= 900) {
-      document.getElementById('sidebar').classList.add('hidden');
-      document.getElementById('toggleSidebar').style.display = 'block';
+    function initializeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const toggleButton = document.getElementById('toggleSidebar');
+      if (window.innerWidth <= 900) {
+        sidebar.classList.add('hidden');
+        toggleButton.style.display = 'block';
+      } else {
+        sidebar.classList.remove('hidden');
+        toggleButton.style.display = 'none';
+      }
     }
 
     // Обработчик изменения размера окна
-    window.addEventListener('resize', () => {
-      if (window.innerWidth <= 900) {
-        document.getElementById('sidebar').classList.add('hidden');
-        document.getElementById('toggleSidebar').style.display = 'block';
-      } else {
-        document.getElementById('sidebar').classList.remove('hidden');
-        document.getElementById('toggleSidebar').style.display = 'none';
-      }
-    });
+    window.addEventListener('resize', initializeSidebar);
+
+    // Инициализация при загрузке
+    initializeSidebar();
 
     // Автоматическое обновление реестра каждые 5 минут
     setInterval(loadGoogleSheet, 5 * 60 * 1000);
