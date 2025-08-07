@@ -23,21 +23,19 @@
       width: 260px;
       background: var(--sidebar-bg);
       color: #fff;
-      padding: 15px;
+      padding: 20px;
       box-shadow: 2px 0 8px rgba(0,0,0,0.1);
       overflow-y: auto;
-      transition: transform 0.3s ease;
     }
-    #sidebar.hidden { transform: translateX(-100%); }
-    #sidebar h3 { font-size: 16px; margin-bottom: 10px; font-weight: 600; }
+    #sidebar h3 { font-size: 18px; margin-bottom: 15px; font-weight: 600; }
     #sidebar button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin: 5px 0;
       background: #334466;
       border: none;
       color: #fff;
-      font-size: 14px;
+      font-size: 15px;
       border-radius: 6px;
       cursor: pointer;
       text-align: left;
@@ -45,67 +43,54 @@
     }
     #sidebar button:hover { background: #405080; }
     #sidebar button.active { background: var(--primary); font-weight: 500; }
-    #toggleSidebar {
-      display: none;
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      padding: 8px 12px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      z-index: 20;
-    }
     #main { display: none; }
     #right {
       flex: 1;
-      padding: 15px;
+      padding: 20px;
       background: #fff;
       overflow-y: auto;
     }
-    #right h3 { font-size: 16px; margin-bottom: 10px; font-weight: 600; }
+    #right h3 { font-size: 18px; margin-bottom: 15px; font-weight: 600; }
     .excel-table {
       width: 100%;
       border-collapse: collapse;
       background: #fff;
-      font-size: 13px;
+      font-size: 14px;
     }
     .excel-table th, .excel-table td {
       border: 1px solid var(--border);
-      padding: 8px;
+      padding: 10px;
       text-align: left;
     }
     .excel-table th { background: #f1f3f5; font-weight: 500; }
     .excel-table tr:hover { background: var(--hover); cursor: pointer; }
     .excel-table tr.selected { background: #d1e7ff; }
-    #tableArea { max-height: 250px; overflow-y: auto; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 6px; }
+    #tableArea { max-height: 300px; overflow-y: auto; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 6px; }
     #templateArea {
-      min-height: 150px;
+      min-height: 200px;
       background: var(--bg-light);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 15px;
-      font-size: 13px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 14px;
       overflow-x: auto;
     }
     #rowInput {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       border: 1px solid var(--border);
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 14px;
       margin-bottom: 10px;
     }
     #generateButton, #copyButton {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       background: var(--primary);
       border: none;
       color: #fff;
-      font-size: 14px;
+      font-size: 15px;
       border-radius: 6px;
       cursor: pointer;
       margin-bottom: 10px;
@@ -113,40 +98,28 @@
     }
     #generateButton:hover, #copyButton:hover { background: #1557b0; }
     #finalLetter {
-      min-height: 150px;
+      min-height: 200px;
       background: var(--bg-light);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 10px;
-      font-size: 13px;
+      padding: 15px;
+      font-size: 14px;
       overflow-x: auto;
     }
     .letter-html table { border-collapse: collapse; }
-    .letter-html th, .letter-html td { border: 1px solid var(--border); padding: 5px 8px; }
-    .error { color: var(--error); font-size: 13px; margin-bottom: 10px; }
+    .letter-html th, .letter-html td { border: 1px solid var(--border); padding: 6px 10px; }
+    .error { color: var(--error); font-size: 14px; margin-bottom: 10px; }
     @media (max-width: 900px) {
       #container { flex-direction: column; }
-      #sidebar {
-        width: 100%;
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        z-index: 10;
-        transform: translateX(-100%);
-      }
-      #sidebar.visible { transform: translateX(0); }
-      #toggleSidebar { display: block; }
-      #right { padding: 10px; }
-      #tableArea { max-height: 200px; }
-      #templateArea, #finalLetter { min-height: 120px; }
+      #sidebar, #right { width: 100%; }
+      #sidebar { position: sticky; top: 0; z-index: 10; }
+      #right { padding: 15px; }
     }
   </style>
 </head>
 <body>
-  <button id="toggleSidebar" onclick="toggleSidebar()">☰ Шаблоны</button>
   <div id="container">
-    <div id="sidebar" class="hidden">
+    <div id="sidebar">
       <h3>Шаблоны писем</h3>
       <div id="templatesList">Загрузка...</div>
     </div>
@@ -176,12 +149,6 @@
     let excelData = [];
     let headers = [];
 
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('visible');
-      sidebar.classList.toggle('hidden');
-    }
-
     async function fetchTemplatesList() {
       try {
         const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
@@ -198,7 +165,7 @@
     function renderTemplatesList() {
       let html = '';
       templatesMeta.forEach((tpl, idx) => {
-        html += `<button onclick="selectTemplate('${tpl.name}'); toggleSidebar();" id="tplbtn-${idx}" title="${tpl.name.replace(/\.html$/i, '')}">${tpl.name.replace(/\.html$/i, '')}</button>`;
+        html += `<button onclick="selectTemplate('${tpl.name}')" id="tplbtn-${idx}" title="${tpl.name.replace(/\.html$/i, '')}">${tpl.name.replace(/\.html$/i, '')}</button>`;
       });
       document.getElementById('templatesList').innerHTML = html || 'Нет шаблонов';
     }
