@@ -2,57 +2,188 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Автоматизация писем через GitHub и Google Таблицы</title>
+  <title>Автоматизация писем</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f6fa; margin: 0; }
+    :root {
+      --primary: #1a73e8;
+      --sidebar-bg: #1a2a44;
+      --border: #e0e7ff;
+      --text: #202124;
+      --bg-light: #f8f9fa;
+      --hover: #e8f0fe;
+      --error: #d32f2f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text); line-height: 1.5; }
     #container { display: flex; min-height: 100vh; }
-    #sidebar { width: 240px; background: #263e5f; color: #fff; padding: 30px 10px 10px 10px; box-shadow: 2px 0 4px rgba(0,0,0,0.03);}
-    #sidebar button { display: block; width: 100%; margin: 10px 0; padding: 12px; background: #385980; border: none; color: #fff; font-size: 16px; border-radius: 7px; cursor: pointer; text-align: left;}
-    #sidebar button.active { background: #21a4e4; font-weight: bold;}
-    #main { flex: 2; padding: 24px; }
-    #right { width: 580px; background: #fff; padding: 20px; border-left: 1px solid #e5e8ee; overflow-x:auto;}
-    .excel-table { width: 100%; border-collapse: collapse; background: #fff; }
-    .excel-table th, .excel-table td { border: 1px solid #d1d9e6; padding: 7px 10px; }
-    .excel-table tr:hover { background: #eaf6ff; cursor: pointer; }
-    #templateArea { min-height: 180px; background: #f7fafd; border: 1px solid #e0e7f4; border-radius: 7px; padding: 15px; margin-bottom: 18px; }
-    #rowInput { margin-bottom: 10px;}
-    #finalLetter { background: #f6f8fb; border-radius: 7px; padding: 18px; font-size: 16px; min-height: 180px; border: 1px solid #e0e7f4; margin-top:12px;}
-    @media (max-width:1100px) { #container { flex-direction: column; } #sidebar, #right { width: 100%;} #main { padding: 10px;} }
+    #sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      color: #fff;
+      padding: 15px;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+    #sidebar.hidden { transform: translateX(-100%); }
+    #sidebar h3 { font-size: 16px; margin-bottom: 10px; font-weight: 600; }
+    #sidebar button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #334466;
+      border: none;
+      color: #fff;
+      font-size: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s;
+    }
+    #sidebar button:hover { background: #405080; }
+    #sidebar button.active { background: var(--primary); font-weight: 500; }
+    #toggleSidebar {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      padding: 8px 12px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 20;
+    }
+    #main { display: none; }
+    #right {
+      flex: 1;
+      padding: 15px;
+      background: #fff;
+      overflow-y: auto;
+    }
+    #right h3 { font-size: 16px; margin-bottom: 10px; font-weight: 600; }
+    #searchInput {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .excel-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 13px;
+    }
+    .excel-table th, .excel-table td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+    }
+    .excel-table th { background: #f1f3f5; font-weight: 500; }
+    .excel-table tr:hover { background: var(--hover); cursor: pointer; }
+    .excel-table tr.selected { background: #d1e7ff; }
+    #tableArea { max-height: 250px; overflow-y: auto; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 6px; }
+    #templateArea {
+      min-height: 150px;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      overflow-x: auto;
+    }
+    #editTemplateArea {
+      width: 100%;
+      min-height: 150px;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      resize: vertical;
+      display: none;
+    }
+    #editTemplateButton, #applyEditButton, #generateButton, #copyButton {
+      width: 100%;
+      padding: 10px;
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      font-size: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: background 0.2s;
+    }
+    #editTemplateButton:hover, #applyEditButton:hover, #generateButton:hover, #copyButton:hover { background: #1557b0; }
+    #finalLetter {
+      min-height: 150px;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 13px;
+      overflow-x: auto;
+    }
     .letter-html table { border-collapse: collapse; }
-    .letter-html th, .letter-html td { border:1px solid #d1d9e6; padding: 5px 8px; }
-    #tableArea {max-height:400px;overflow-y:auto;margin-bottom:15px;}
+    .letter-html th, .letter-html td { border: 1px solid var(--border); padding: 5px 8px; }
+    .error { color: var(--error); font-size: 13px; margin-bottom: 10px; }
+    @media (max-width: 900px) {
+      #container { flex-direction: column; }
+      #sidebar {
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        z-index: 10;
+        transform: translateX(-100%);
+      }
+      #sidebar.visible { transform: translateX(0); }
+      #toggleSidebar { display: block; }
+      #right { padding: 10px; }
+      #tableArea { max-height: 200px; }
+      #templateArea, #editTemplateArea, #finalLetter { min-height: 120px; }
+    }
   </style>
 </head>
 <body>
+  <button id="toggleSidebar" onclick="toggleSidebar()">☰ Шаблоны</button>
   <div id="container">
-    <!-- Левая панель — шаблоны писем из GitHub -->
-    <div id="sidebar">
+    <div id="sidebar" class="hidden">
       <h3>Шаблоны писем</h3>
       <div id="templatesList">Загрузка...</div>
     </div>
-    <!-- Центр убран, теперь реестр справа -->
-    <div id="main" style="display:none;"></div>
-    <!-- Правая часть — реестр и письмо -->
+    <div id="main"></div>
     <div id="right">
       <h3>Реестр заявок</h3>
+      <input type="text" id="searchInput" placeholder="Поиск по реестру..." oninput="searchTable()">
       <div id="tableArea"></div>
       <h3>Форма письма</h3>
       <div id="templateArea" class="letter-html">Выберите шаблон письма и строку из реестра.</div>
-      <input type="number" id="rowInput" placeholder="Введите номер строки" min="2" style="width: 100%;margin-bottom: 8px;">
-      <button onclick="generateLetter()" style="width: 100%; margin-bottom:15px;">Сформировать письмо</button>
+      <button id="editTemplateButton" onclick="toggleEditTemplate()" style="display: none;">Редактировать шаблон</button>
+      <textarea id="editTemplateArea"></textarea>
+      <button id="applyEditButton" onclick="applyTemplateEdit()" style="display: none;">Применить изменения</button>
+      <input type="number" id="rowInput" placeholder="Введите номер строки реестра" min="2">
+      <button id="generateButton" onclick="generateLetter()">Сформировать письмо</button>
+      <div id="errorArea" class="error"></div>
+      <h3>Итоговое письмо</h3>
+      <button id="copyButton" onclick="copyLetter()" style="display: none;">Копировать письмо</button>
       <div id="finalLetter" class="letter-html"></div>
     </div>
   </div>
   <script>
-    // --- Настройки GitHub ---
     const GITHUB_USER = "anatoliy031";
     const GITHUB_REPO = "letter-automation";
     const GITHUB_TEMPLATES_FOLDER = "templates";
-
-    // --- Постоянная ссылка на Google-таблицу ---
-    // Используй только ID!
     const GOOGLE_SHEET_ID = "1-P3T-ik_gU7qrr0KGDFbxQ80F70_Z8K5QT4siN31Or4";
 
     let templatesMeta = [];
@@ -60,62 +191,108 @@
     let currentTemplateContent = '';
     let excelData = [];
     let headers = [];
+    let filteredData = [];
 
-    // --- 1. Загрузка списка шаблонов из GitHub ---
-    async function fetchTemplatesList() {
-      const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
-      const res = await fetch(apiUrl);
-      if (!res.ok) {
-        document.getElementById('templatesList').innerHTML = "Не удалось загрузить список шаблонов!";
-        return;
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('visible');
+      sidebar.classList.toggle('hidden');
+    }
+
+    function toggleEditTemplate() {
+      const editArea = document.getElementById('editTemplateArea');
+      const applyButton = document.getElementById('applyEditButton');
+      const templateArea = document.getElementById('templateArea');
+      if (editArea.style.display === 'none') {
+        editArea.value = currentTemplateContent;
+        editArea.style.display = 'block';
+        applyButton.style.display = 'block';
+        templateArea.style.display = 'none';
+      } else {
+        editArea.style.display = 'none';
+        applyButton.style.display = 'none';
+        templateArea.style.display = 'block';
       }
-      const files = await res.json();
-      templatesMeta = files.filter(f => /\.html$/i.test(f.name));
-      renderTemplatesList();
+    }
+
+    function applyTemplateEdit() {
+      const editArea = document.getElementById('editTemplateArea');
+      currentTemplateContent = editArea.value;
+      document.getElementById('templateArea').innerHTML = currentTemplateContent;
+      document.getElementById('finalLetter').innerHTML = '';
+      document.getElementById('copyButton').style.display = 'none';
+      toggleEditTemplate();
+    }
+
+    async function fetchTemplatesList() {
+      try {
+        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error('Не удалось загрузить шаблоны');
+        const files = await res.json();
+        templatesMeta = files.filter(f => /\.html$/i.test(f.name));
+        renderTemplatesList();
+      } catch (e) {
+        document.getElementById('templatesList').innerHTML = 'Ошибка загрузки шаблонов';
+      }
     }
 
     function renderTemplatesList() {
       let html = '';
       templatesMeta.forEach((tpl, idx) => {
-        html += `<button onclick="selectTemplate('${tpl.name}')" id="tplbtn-${idx}">${tpl.name.replace(/\.html$/i, '')}</button>`;
+        html += `<button onclick="selectTemplate('${tpl.name}'); toggleSidebar();" id="tplbtn-${idx}" title="${tpl.name.replace(/\.html$/i, '')}">${tpl.name.replace(/\.html$/i, '')}</button>`;
       });
       document.getElementById('templatesList').innerHTML = html || 'Нет шаблонов';
     }
 
-    // --- 2. Загрузка содержимого шаблона по клику ---
     async function selectTemplate(name) {
-      currentTemplateName = name;
-      currentTemplateContent = '';
-      document.querySelectorAll('#templatesList button').forEach(btn => btn.classList.remove('active'));
-      const idx = templatesMeta.findIndex(t=>t.name===name);
-      if (idx>=0) document.getElementById(`tplbtn-${idx}`).classList.add('active');
-      const rawUrl = templatesMeta[idx].download_url;
-      const res = await fetch(rawUrl);
-      if (!res.ok) {
-        document.getElementById('templateArea').innerText = "Не удалось загрузить шаблон";
-        return;
+      try {
+        currentTemplateName = name;
+        currentTemplateContent = '';
+        document.querySelectorAll('#templatesList button').forEach(btn => btn.classList.remove('active'));
+        const idx = templatesMeta.findIndex(t => t.name === name);
+        if (idx >= 0) document.getElementById(`tplbtn-${idx}`).classList.add('active');
+        const rawUrl = templatesMeta[idx].download_url;
+        const res = await fetch(rawUrl);
+        if (!res.ok) throw new Error('Не удалось загрузить шаблон');
+        const text = await res.text();
+        currentTemplateContent = text;
+        document.getElementById('templateArea').innerHTML = text;
+        document.getElementById('editTemplateButton').style.display = 'block';
+        document.getElementById('finalLetter').innerHTML = '';
+        document.getElementById('copyButton').style.display = 'none';
+        document.getElementById('errorArea').innerText = '';
+        document.getElementById('editTemplateArea').style.display = 'none';
+        document.getElementById('applyEditButton').style.display = 'none';
+        document.getElementById('templateArea').style.display = 'block';
+      } catch (e) {
+        document.getElementById('templateArea').innerText = 'Ошибка загрузки шаблона';
       }
-      const text = await res.text();
-      currentTemplateContent = text;
-      document.getElementById('templateArea').innerHTML = text;
-      document.getElementById('finalLetter').innerHTML = '';
     }
 
-    // --- 3. Автоматическая загрузка Google-таблицы ---
     async function loadGoogleSheet() {
-      let sheetId = GOOGLE_SHEET_ID;
-      let csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-      const res = await fetch(csvUrl);
-      if (!res.ok) {
-        document.getElementById('tableArea').innerHTML = "Не удалось загрузить Google Таблицу!";
-        return;
+      try {
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv`;
+        const res = await fetch(csvUrl);
+        if (!res.ok) throw new Error('Не удалось загрузить таблицу');
+        const csv = await res.text();
+        const workbook = XLSX.read(csv, { type: 'string' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+        headers = json[0];
+        excelData = json.slice(1);
+        filteredData = [...excelData];
+        renderTable();
+      } catch (e) {
+        document.getElementById('tableArea').innerHTML = 'Ошибка загрузки таблицы';
       }
-      const csv = await res.text();
-      const workbook = XLSX.read(csv, {type:'string'});
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(firstSheet, {header:1});
-      headers = json[0];
-      excelData = json.slice(1);
+    }
+
+    function searchTable() {
+      const searchInput = document.getElementById('searchInput').value.toLowerCase();
+      filteredData = excelData.filter(row =>
+        row.some(cell => (cell || '').toString().toLowerCase().includes(searchInput))
+      );
       renderTable();
     }
 
@@ -123,41 +300,65 @@
       let html = `<table class="excel-table"><tr>`;
       headers.forEach(h => html += `<th>${h}</th>`);
       html += `</tr>`;
-      excelData.forEach((row, idx) => {
-        html += `<tr onclick="selectRow(${idx})">`;
-        headers.forEach((h,j) => html += `<td>${row[j]||''}</td>`);
-        html += `</tr>`;
-      });
+      if (filteredData.length === 0) {
+        html += `<tr><td colspan="${headers.length}" style="text-align: center;">Нет результатов</td></tr>`;
+      } else {
+        filteredData.forEach((row, idx) => {
+          const originalIdx = excelData.indexOf(row);
+          html += `<tr onclick="selectRow(${originalIdx})" class="${document.getElementById('rowInput').value - 2 === originalIdx ? 'selected' : ''}">`;
+          headers.forEach((h, j) => html += `<td>${row[j] || ''}</td>`);
+          html += `</tr>`;
+        });
+      }
       html += `</table>`;
       document.getElementById('tableArea').innerHTML = html;
     }
 
     function selectRow(idx) {
-      document.getElementById('rowInput').value = idx+2;
+      document.getElementById('rowInput').value = idx + 2;
       generateLetter();
     }
 
-    // --- 4. Формирование итогового письма ---
     function generateLetter() {
+      const errorArea = document.getElementById('errorArea');
+      errorArea.innerText = '';
       if (!currentTemplateContent) {
-        alert('Сначала выберите шаблон!');
+        errorArea.innerText = 'Выберите шаблон письма';
         return;
       }
       const rowNum = parseInt(document.getElementById('rowInput').value);
-      if (isNaN(rowNum) || rowNum < 2 || rowNum-2 >= excelData.length) {
-        alert('Введите корректный номер строки!');
+      if (isNaN(rowNum) || rowNum < 2 || rowNum - 2 >= excelData.length) {
+        errorArea.innerText = 'Введите корректный номер строки';
         return;
       }
-      const row = excelData[rowNum-2];
+      const row = excelData[rowNum - 2];
       let letter = currentTemplateContent;
       headers.forEach((h, j) => {
         const regex = new RegExp(`{${h}}`, 'g');
-        letter = letter.replace(regex, row[j]||'');
+        letter = letter.replace(regex, row[j] || '');
       });
       document.getElementById('finalLetter').innerHTML = letter;
+      document.getElementById('copyButton').style.display = 'block';
+      renderTable();
     }
 
-    // --- Запуск ---
+    function copyLetter() {
+      const finalLetter = document.getElementById('finalLetter');
+      const range = document.createRange();
+      range.selectNodeContents(finalLetter);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.execCommand('copy');
+      selection.removeAllRanges();
+      const copyButton = document.getElementById('copyButton');
+      copyButton.innerText = 'Скопировано!';
+      setTimeout(() => { copyButton.innerText = 'Копировать письмо'; }, 2000);
+    }
+
+    // Автоматическое обновление реестра каждые 5 минут
+    setInterval(loadGoogleSheet, 5 * 60 * 1000);
+
     fetchTemplatesList();
     loadGoogleSheet();
   </script>
