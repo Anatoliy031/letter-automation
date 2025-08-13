@@ -1,165 +1,202 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Автоматизация писем — упрощённый интерфейс ([[...]] теги)</title>
+  <meta charset="UTF-8">
+  <title>Автоматизация писем</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- UI-шрифт -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <!-- CSV / Excel -->
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
-  <!-- DocxTemplater + PizZip -->
-  <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.38.0/build/docxtemplater.js"></script>
-
-  <!-- Mammoth: превью .docx как HTML -->
-  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script defer src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/docxtemplater@3.38.0/build/docxtemplater.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
   <style>
-    :root{
-      --primary:#1a73e8;--sidebar-bg:#1a2a44;--border:#e0e7ff;--text:#202124;--bg:#fff;--bg-light:#f7f9fc;
-      --hover:#e8f0fe;--error:#d32f2f;--ok:#188038;--shadow:0 6px 24px rgba(0,0,0,.06)
+    :root {
+      --primary: #1976d2;
+      --secondary: #f5f7fa;
+      --sidebar-bg: #1e2a44;
+      --border: #e0e7ff;
+      --text: #1c2526;
+      --bg: #ffffff;
+      --bg-light: #f7f9fc;
+      --hover: #e8f0fe;
+      --error: #d32f2f;
+      --success: #2e7d32;
+      --shadow: 0 4px 12px rgba(0,0,0,0.1);
+      --transition: 0.2s ease;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg-light)}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text); line-height: 1.5; }
 
-    .appbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);
-      display:flex;align-items:center;gap:12px;padding:10px 12px}
-    .app-title{font-weight:600}
-    .spacer{flex:1}
-    .icon-btn{appearance:none;border:0;background:transparent;cursor:pointer;padding:8px;border-radius:10px}
-    .icon-btn:hover{background:#f1f5ff}
-    .ham{width:24px;height:2px;background:#222;position:relative;display:block}
-    .ham::before,.ham::after{content:"";position:absolute;left:0;right:0;height:2px;background:#222}
-    .ham::before{top:-7px}.ham::after{top:7px}
+    .appbar {
+      position: sticky; top: 0; z-index: 50; background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    }
+    .app-title { font-size: 18px; font-weight: 600; }
+    .spacer { flex: 1; }
+    .icon-btn {
+      appearance: none; border: 0; background: transparent; cursor: pointer; padding: 8px;
+      border-radius: 8px; transition: var(--transition);
+    }
+    .icon-btn:hover { background: var(--hover); }
+    .material-icons { font-size: 24px; color: var(--text); }
 
-    .layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 54px)}
-    aside#sidebar{background:var(--sidebar-bg);color:#fff;padding:16px;border-right:1px solid rgba(255,255,255,.08);overflow:auto}
-    .sb-title{font-size:16px;font-weight:600;margin-bottom:10px}
-    .sb-note{font-size:12px;opacity:.9;margin-bottom:10px}
-    .sb-search input{width:100%;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;margin-bottom:10px}
-    .tpl-list{display:grid;gap:6px}
-    .tpl-btn{width:100%;text-align:left;background:#334466;color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;transition:.15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tpl-btn:hover{background:#3b4e78}
-    .tpl-btn.active{background:var(--primary);font-weight:600}
+    .layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 56px); }
+    aside#sidebar {
+      background: var(--sidebar-bg); color: #fff; padding: 16px; border-right: 1px solid rgba(255,255,255,0.1);
+      overflow-y: auto; transition: var(--transition);
+    }
+    .sb-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .sb-note { font-size: 12px; opacity: 0.85; margin-bottom: 12px; }
+    .sb-search input {
+      width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1); color: #fff; font-size: 14px; margin-bottom: 12px;
+    }
+    .tpl-list { display: grid; gap: 6px; }
+    .tpl-btn {
+      width: 100%; text-align: left; background: #2a3b5a; color: #fff; border: 0; border-radius: 8px;
+      padding: 10px 12px; cursor: pointer; transition: var(--transition); font-size: 14px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tpl-btn:hover { background: #3a4e78; }
+    .tpl-btn.active { background: var(--primary); font-weight: 600; }
+    .fav-btn { background: #4a5b7a; }
+    .fav-btn.active { background: #ffca28; color: #1c2526; }
 
-    main{padding:16px;overflow:auto}
-    .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:var(--shadow);margin-bottom:12px}
-    h3{margin:6px 0 10px;font-size:16px}
+    main { padding: 16px; overflow-y: auto; }
+    .card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
 
-    /* обновлено: добавили поле Номер строки */
-    .filters{display:grid;grid-template-columns:1fr 260px 140px;gap:8px;align-items:center}
-    .filters input, .filters select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
-    .muted{font-size:12px;opacity:.8}
-    .link{color:var(--primary);cursor:pointer}
-    .link:hover{text-decoration:underline}
+    .filters { display: grid; grid-template-columns: 1fr 260px 140px; gap: 12px; align-items: center; }
+    .filters input, .filters select { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; }
+    .filters input:focus, .filters select:focus { outline: none; border-color: var(--primary); }
+    .muted { font-size: 12px; color: #5f6368; margin-top: 8px; }
+    .link { color: var(--primary); cursor: pointer; }
+    .link:hover { text-decoration: underline; }
 
-    #preview{min-height:220px;border:1px solid var(--border);border-radius:10px;background:#fafbff;padding:12px;overflow:auto}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .btn{border:0;border-radius:10px;padding:10px 12px;font-size:14px;cursor:pointer}
-    .btn-primary{background:var(--primary);color:#fff}
-    .btn-secondary{background:#eef1f7}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .error{color:var(--error);font-size:13px;margin-top:6px;white-space:pre-wrap}
+    #preview { min-height: 240px; border: 1px solid var(--border); border-radius: 8px; background: #fafbff; padding: 12px; overflow: auto; font-size: 14px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .btn { border: 0; border-radius: 8px; padding: 10px 16px; font-size: 14px; cursor: pointer; transition: var(--transition); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary { background: var(--secondary); color: var(--text); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .error { color: var(--error); font-size: 13px; margin-top: 8px; }
+    .success { color: var(--success); font-size: 13px; margin-top: 8px; }
 
-    .drawer{display:none;margin-top:8px}
-    .drawer.open{display:block}
-    .table-wrap{border:1px solid var(--border);border-radius:10px;overflow:auto;max-height:55vh;background:#fff}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{border-bottom:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
-    thead th{position:sticky;top:0;background:#f4f6fb;z-index:1}
+    .table-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: auto; max-height: 50vh; background: #fff; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+    thead th { position: sticky; top: 0; background: #f4f6fb; z-index: 1; }
+    tr:hover { background: var(--hover); cursor: pointer; }
+    tr.selected { background: #e3f2fd; }
 
-    .scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.2s;z-index:55}
-    .scrim.show{opacity:1;pointer-events:auto}
-    .drawer-side{position:fixed;inset:0 30% 0 0;max-width:80vw;background:var(--sidebar-bg);color:#fff;padding:14px;transform:translateX(-100%);transition:transform .2s ease;z-index:60;overflow:auto;border-right:1px solid rgba(255,255,255,.08)}
-    .drawer-side.open{transform:none}
+    .scrim { position: fixed; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: var(--transition); z-index: 55; }
+    .scrim.show { opacity: 1; pointer-events: auto; }
+    .drawer-side {
+      position: fixed; inset: 0 30% 0 0; max-width: 85vw; background: var(--sidebar-bg); color: #fff;
+      padding: 16px; transform: translateX(-100%); transition: var(--transition); z-index: 60; overflow-y: auto;
+    }
+    .drawer-side.open { transform: none; }
 
-    @media (max-width:1199px){ .layout{grid-template-columns:260px 1fr} }
-    @media (max-width:767px){
-      .layout{display:block}
-      aside#sidebar{display:none}
-      .filters{grid-template-columns:1fr 1fr}
-      .filters input#rowNumberInput{grid-column:1 / -1}
+    .loader { display: none; text-align: center; padding: 16px; }
+    .loader.active { display: block; }
+    .loader::after { content: ''; display: inline-block; width: 24px; height: 24px; border: 2px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 1024px) {
+      .layout { grid-template-columns: 240px 1fr; }
+      .filters { grid-template-columns: 1fr 200px; }
+      .filters input#rowNumberInput { grid-column: 1 / -1; }
+    }
+    @media (max-width: 767px) {
+      .layout { display: block; }
+      aside#sidebar { display: none; }
+      .filters { grid-template-columns: 1fr; gap: 8px; }
+      .filters select, .filters input#rowNumberInput { grid-column: 1 / -1; }
+      .table-wrap { max-height: 70vh; }
+      .card { padding: 12px; }
     }
   </style>
 </head>
 <body>
   <div class="appbar">
-    <button id="menuBtn" class="icon-btn" aria-label="Открыть меню"><span class="ham"></span></button>
+    <button id="menuBtn" class="icon-btn" aria-label="Открыть меню"><span class="material-icons">menu</span></button>
     <div class="app-title">Автоматизация писем</div>
     <div class="spacer"></div>
+    <button id="uploadBtn" class="icon-btn" title="Загрузить .csv"><span class="material-icons">upload_file</span></button>
   </div>
 
-  <!-- Mobile sidebar drawer -->
   <div id="scrim" class="scrim" aria-hidden="true"></div>
   <aside id="drawerSide" class="drawer-side" aria-hidden="true">
-    <div class="sb-title">Шаблоны (.docx)</div>
+    <div class="sb-title">Избранные шаблоны</div>
+    <div id="favListMobile" class="tpl-list"></div>
+    <div class="sb-title" style="margin-top: 16px;">Все шаблоны (.docx)</div>
     <div class="sb-note">Теги <code>[[Поле]]</code>. Шрифты/отступы — как в Word.</div>
     <div class="sb-search"><input id="tplSearchMobile" placeholder="Поиск шаблона…"></div>
     <div id="tplListMobile" class="tpl-list">Загрузка…</div>
+    <div class="loader" id="tplLoaderMobile"></div>
   </aside>
 
   <div class="layout">
-    <!-- Sidebar (tablet/desktop) -->
     <aside id="sidebar">
-      <div class="sb-title">Шаблоны (.docx)</div>
+      <div class="sb-title">Избранные шаблоны</div>
+      <div id="favList" class="tpl-list"></div>
+      <div class="sb-title" style="margin-top: 16px;">Все шаблоны (.docx)</div>
       <div class="sb-note">Теги <code>[[Поле]]</code>. Шрифты/отступы — как в Word.</div>
       <div class="sb-search"><input id="tplSearch" placeholder="Поиск шаблона…"></div>
       <div id="templatesList" class="tpl-list">Загрузка…</div>
+      <div class="loader" id="tplLoader"></div>
     </aside>
 
     <main>
-      <!-- Фильтры + выбор записи + Номер строки -->
       <section class="card">
         <h3>Данные для письма</h3>
         <div class="filters">
-          <input id="smartQuery" placeholder="Фильтр по всем полям (пример: Филиал=Тихорецкие ОС=Ростелеком «Номер_ТУ=123»). Просто текст — общий поиск">
+          <input id="smartQuery" placeholder="Фильтр: Филиал=Тихорецкие Номер_ТУ=123 или текст для поиска">
           <select id="recordSelect"><option value="">— выберите запись —</option></select>
-          <!-- НОВОЕ: выбор номера строки -->
           <input id="rowNumberInput" type="number" min="2" placeholder="№ строки (со 2)">
         </div>
-        <div class="muted" style="margin-top:6px">
+        <div class="muted">
           <span id="matchInfo">Совпадений: 0</span> •
           <span class="link" id="toggleRegistry">Показать реестр</span> •
-          <span class="link" id="toggleDiag">Показать диагностику</span>
+          <span class="link" id="toggleDiag">Диагностика</span>
         </div>
+        <div id="errorFilter" class="error"></div>
       </section>
 
-      <!-- Превью письма + действия -->
       <section class="card">
         <h3>Письмо</h3>
         <div id="preview">Выберите шаблон и задайте фильтр/строку.</div>
         <div id="errorTpl" class="error"></div>
+        <div id="successMsg" class="success"></div>
         <div class="actions">
+          <button class="btn btn-primary" id="generateBtn">Сформировать</button>
           <button class="btn btn-primary" id="downloadBtn" disabled>Скачать .docx</button>
-          <button class="btn btn-secondary" id="copyBtn" disabled>Скопировать письмо</button>
+          <button class="btn btn-secondary" id="copyBtn" disabled>Скопировать</button>
         </div>
       </section>
 
-      <!-- Скрытые разделы -->
       <section class="card drawer" id="registryDrawer">
-        <h3 style="margin-top:0">Реестр (просмотр)</h3>
+        <h3 style="margin-top: 0;">Реестр</h3>
         <div class="table-wrap" id="tableWrap"></div>
+        <div class="loader" id="tableLoader"></div>
       </section>
 
       <section class="card drawer" id="diagDrawer">
-        <h3 style="margin-top:0">Диагностика соответствия</h3>
-        <div class="muted">Теги в выбранном шаблоне</div>
-        <div id="tplTags" class="table-wrap" style="padding:8px;border:1px dashed var(--border);border-radius:10px;background:#f7f9ff">—</div>
-        <div class="muted" style="margin-top:8px">Заголовки в таблице</div>
-        <div id="sheetHeaders" class="table-wrap" style="padding:8px;border:1px dashed var(--border);border-radius:10px;background:#f7f9ff">—</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <h3 style="margin-top: 0;">Диагностика соответствия</h3>
+        <div class="muted">Теги в шаблоне</div>
+        <div id="tplTags" class="table-wrap" style="padding: 8px; border: 1px dashed var(--border); border-radius: 8px; background: #f7f9ff;">—</div>
+        <div class="muted" style="margin-top: 8px;">Заголовки в таблице</div>
+        <div id="sheetHeaders" class="table-wrap" style="padding: 8px; border: 1px dashed var(--border); border-radius: 8px; background: #f7f9ff;">—</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
           <div>
             <div class="muted">Отсутствуют в таблице</div>
-            <div id="missingInSheet" class="table-wrap" style="padding:8px;border:1px dashed var(--border);border-radius:10px;background:#f7f9ff">—</div>
+            <div id="missingInSheet" class="table-wrap" style="padding: 8px; border: 1px dashed var(--border); border-radius: 8px; background: #f7f9ff;">—</div>
           </div>
           <div>
             <div class="muted">Лишние столбцы</div>
-            <div id="unusedHeaders" class="table-wrap" style="padding:8px;border:1px dashed var(--border);border-radius:10px;background:#f7f9ff">—</div>
+            <div id="unusedHeaders" class="table-wrap" style="padding: 8px; border: 1px dashed var(--border); border-radius: 8px; background: #f7f9ff;">—</div>
           </div>
         </div>
       </section>
@@ -167,412 +204,577 @@
   </div>
 
   <script>
-    // ===== НАСТРОЙКИ =====
+    // НАСТРОЙКИ
     const GITHUB_USER = "anatoliy031";
     const GITHUB_REPO = "letter-automation";
     const GITHUB_TEMPLATES_FOLDER = "templates";
     const DEFAULT_GOOGLE_SHEET_ID = "17vdbh0KHIZ-lAsqFXp6HtQA-NBymV5Wh";
 
-    // ===== СОСТОЯНИЕ =====
+    // СОСТОЯНИЕ
     let templatesMeta = [];
     let selectedTemplate = null;
     let excelHeaders = [];
     let excelRows = [];
     let currentTplTags = [];
     let lastGeneratedBlob = null;
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 
-    // ===== UI =====
+    // UI ЭЛЕМЕНТЫ
     const $menuBtn = document.getElementById('menuBtn');
     const $drawerSide = document.getElementById('drawerSide');
     const $scrim = document.getElementById('scrim');
-
     const $tplSearch = document.getElementById('tplSearch');
     const $tplSearchMobile = document.getElementById('tplSearchMobile');
     const $sidebarList = document.getElementById('templatesList');
     const $tplListMobile = document.getElementById('tplListMobile');
-
+    const $favList = document.getElementById('favList');
+    const $favListMobile = document.getElementById('favListMobile');
     const $smartQuery = document.getElementById('smartQuery');
     const $recordSelect = document.getElementById('recordSelect');
     const $rowNumberInput = document.getElementById('rowNumberInput');
     const $matchInfo = document.getElementById('matchInfo');
-
     const $preview = document.getElementById('preview');
     const $errorTpl = document.getElementById('errorTpl');
+    const $successMsg = document.getElementById('successMsg');
     const $downloadBtn = document.getElementById('downloadBtn');
     const $copyBtn = document.getElementById('copyBtn');
-
+    const $generateBtn = document.getElementById('generateBtn');
     const $tableWrap = document.getElementById('tableWrap');
     const $toggleRegistry = document.getElementById('toggleRegistry');
     const $toggleDiag = document.getElementById('toggleDiag');
     const $registryDrawer = document.getElementById('registryDrawer');
     const $diagDrawer = document.getElementById('diagDrawer');
-
     const $tplTags = document.getElementById('tplTags');
     const $sheetHeaders = document.getElementById('sheetHeaders');
     const $missingInSheet = document.getElementById('missingInSheet');
     const $unusedHeaders = document.getElementById('unusedHeaders');
+    const $tplLoader = document.getElementById('tplLoader');
+    const $tplLoaderMobile = document.getElementById('tplLoaderMobile');
+    const $tableLoader = document.getElementById('tableLoader');
+    const $uploadBtn = document.getElementById('uploadBtn');
 
-    // ===== HELPERS =====
+    // HELPERS
     const isMobile = () => window.matchMedia("(max-width: 767px)").matches;
-    function setError(el, msg){ el.textContent = msg || ""; }
-    function clearPreview(){ $preview.innerHTML = "Выберите шаблон и задайте фильтр/строку."; $downloadBtn.disabled = true; $copyBtn.disabled = true; }
-    function csvUrlFromSheetId(id){ return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`; }
+    const setError = (el, msg) => { el.textContent = msg || ''; };
+    const setSuccess = (el, msg) => { el.textContent = msg || ''; setTimeout(() => el.textContent = '', 3000); };
+    const clearPreview = () => { $preview.innerHTML = 'Выберите шаблон и задайте фильтр/строку.'; $downloadBtn.disabled = true; $copyBtn.disabled = true; };
+    const csvUrlFromSheetId = id => `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
     const uniq = arr => [...new Set(arr)];
-    const renderChips = list => (!list||!list.length) ? "—" : list.map(k=>`<code style="background:#eee;border-radius:6px;padding:2px 6px;margin:2px 4px 0 0;display:inline-block">${k}</code>`).join(" ");
-
-    function normalizeKey(s){
-      if(!s) return "";
-      return s.normalize("NFC").replace(/\u00A0/g,' ').replace(/№/g,'N').replace(/[.,;:()]/g,'').replace(/\s+/g,'_').replace(/-+/g,'_').replace(/__+/g,'_').trim();
-    }
-    function makeAliases(header){
-      const h = header ?? "";
-      const withUnderscore = h.replace(/\s+/g,'_');
-      const withSpaces = h.replace(/_/g,' ');
+    const renderChips = list => (!list || !list.length) ? '—' : list.map(k => `<code style="background:#eee;border-radius:6px;padding:2px 6px;margin:2px 4px 0 0;display:inline-block">${k}</code>`).join('');
+    const normalizeKey = s => s ? s.normalize('NFC').replace(/\u00A0/g, ' ').replace(/№/g, 'N').replace(/[.,;:()]/g, '').replace(/\s+/g, '_').replace(/-+/g, '_').replace(/__+/g, '_').trim() : '';
+    const makeAliases = header => {
+      const h = header ?? '';
+      const withUnderscore = h.replace(/\s+/g, '_');
+      const withSpaces = h.replace(/_/g, ' ');
       const norm = normalizeKey(h);
       return uniq([h, withUnderscore, withSpaces, h.toLowerCase(), withUnderscore.toLowerCase(), withSpaces.toLowerCase(), norm, norm.toLowerCase()]);
-    }
-    function buildDataObject(headers,row){
-      const obj={};
-      headers.forEach((h,i)=>{ makeAliases(h).forEach(alias=>obj[alias] = row[i] ?? ""); });
+    };
+    const buildDataObject = (headers, row) => {
+      const obj = {};
+      headers.forEach((h, i) => makeAliases(h).forEach(alias => obj[alias] = row[i] ?? ''));
       return obj;
-    }
+    };
 
-    // ===== MOBILE SIDEBAR =====
-    function openSide(){ $drawerSide.classList.add('open'); $drawerSide.setAttribute('aria-hidden','false'); $scrim.classList.add('show'); $scrim.setAttribute('aria-hidden','false'); }
-    function closeSide(){ $drawerSide.classList.remove('open'); $drawerSide.setAttribute('aria-hidden','true'); $scrim.classList.remove('show'); $scrim.setAttribute('aria-hidden','true'); }
+    // LOCAL STORAGE
+    const saveState = () => {
+      localStorage.setItem('lastTemplate', selectedTemplate ? selectedTemplate.name : '');
+      localStorage.setItem('lastRow', $rowNumberInput.value || '');
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+    };
+    const loadState = () => {
+      const lastTemplate = localStorage.getItem('lastTemplate');
+      if (lastTemplate) {
+        const idx = templatesMeta.findIndex(t => t.name === lastTemplate);
+        if (idx >= 0) selectTemplate(idx, 'templatesList');
+      }
+      const lastRow = localStorage.getItem('lastRow');
+      if (lastRow) $rowNumberInput.value = lastRow;
+    };
+
+    // MOBILE SIDEBAR
+    const openSide = () => {
+      $drawerSide.classList.add('open');
+      $drawerSide.setAttribute('aria-hidden', 'false');
+      $scrim.classList.add('show');
+      $scrim.setAttribute('aria-hidden', 'false');
+    };
+    const closeSide = () => {
+      $drawerSide.classList.remove('open');
+      $drawerSide.setAttribute('aria-hidden', 'true');
+      $scrim.classList.remove('show');
+      $scrim.setAttribute('aria-hidden', 'true');
+    };
     $menuBtn.addEventListener('click', openSide);
     $scrim.addEventListener('click', closeSide);
-    window.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSide(); });
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') closeSide(); });
 
-    // ===== ТЕМПЛЕЙТЫ (.docx) =====
-    async function fetchTemplatesList(){
-      try{
+    // TEMPLATES
+    async function fetchTemplatesList() {
+      $tplLoader.classList.add('active');
+      $tplLoaderMobile.classList.add('active');
+      try {
+        const cached = localStorage.getItem('templatesCache');
+        const cacheTime = localStorage.getItem('templatesCacheTime');
+        if (cached && cacheTime && Date.now() - parseInt(cacheTime) < 3600 * 1000) {
+          templatesMeta = JSON.parse(cached);
+          renderTemplates();
+          loadState();
+          return;
+        }
         const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
-        const res = await fetch(apiUrl);
-        if(!res.ok) throw new Error("GitHub API error");
+        const res = await fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' } });
+        if (!res.ok) throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
         const files = await res.json();
-        const docs = files.filter(f=>/\.docx$/i.test(f.name)).map(f=>({name:f.name, url:f.download_url}));
-        templatesMeta = docs;
+        templatesMeta = files.filter(f => /\.docx$/i.test(f.name)).map(f => ({ name: f.name, url: f.download_url }));
+        localStorage.setItem('templatesCache', JSON.stringify(templatesMeta));
+        localStorage.setItem('templatesCacheTime', Date.now());
         renderTemplates();
-      }catch(e){
-        $sidebarList.innerHTML = "Ошибка загрузки шаблонов";
-        $tplListMobile.innerHTML = "Ошибка загрузки шаблонов";
+        loadState();
+      } catch (e) {
+        console.error('Ошибка загрузки шаблонов:', e);
+        setError($errorTpl, `Ошибка загрузки шаблонов: ${e.message}. Проверьте репозиторий https://github.com/${GITHUB_USER}/${GITHUB_REPO}.`);
+        $sidebarList.innerHTML = 'Ошибка загрузки шаблонов';
+        $tplListMobile.innerHTML = 'Ошибка загрузки шаблонов';
+      } finally {
+        $tplLoader.classList.remove('active');
+        $tplLoaderMobile.classList.remove('active');
       }
     }
-    function renderTemplates(){
-      const filter = v => (t)=> t.name.toLowerCase().includes(v.trim().toLowerCase());
-      const renderList = (container, query)=>{
-        if(!templatesMeta.length){ container.innerHTML = "Нет .docx-шаблонов"; return; }
-        container.innerHTML = templatesMeta.filter(filter(query||"")).map((t,idx)=>
-          `<button class="tpl-btn ${selectedTemplate && selectedTemplate.name===t.name?'active':''}" onclick="selectTemplate(${idx}, '${container.id}')" title="${t.name.replace(/\.docx$/i,'')}">${t.name.replace(/\.docx$/i,'')}</button>`
-        ).join("");
+
+    function renderTemplates() {
+      const filter = v => t => t.name.toLowerCase().includes(v.trim().toLowerCase());
+      const renderList = (container, query, isFav = false) => {
+        const list = isFav ? templatesMeta.filter(t => favorites.includes(t.name)) : templatesMeta;
+        if (!list.length) {
+          container.innerHTML = isFav ? 'Нет избранных шаблонов' : 'Нет шаблонов';
+          return;
+        }
+        container.innerHTML = list.filter(filter(query || '')).map((t, idx) => `
+          <button class="tpl-btn ${isFav ? 'fav-btn' : ''} ${selectedTemplate && selectedTemplate.name === t.name ? 'active' : ''}" 
+                  onclick="selectTemplate(${templatesMeta.indexOf(t)}, '${container.id}'); ${isFav ? '' : `toggleFavorite('${t.name}')`}" 
+                  title="${t.name.replace(/\.docx$/i, '')}">
+            <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 8px;">
+              ${isFav || favorites.includes(t.name) ? 'star' : 'star_border'}
+            </span>
+            ${t.name.replace(/\.docx$/i, '')}
+          </button>
+        `).join('');
       };
-      renderList($sidebarList, $tplSearch.value||"");
-      renderList($tplListMobile, $tplSearchMobile.value||"");
+      renderList($sidebarList, $tplSearch.value, false);
+      renderList($tplListMobile, $tplSearchMobile.value, false);
+      renderList($favList, '', true);
+      renderList($favListMobile, '', true);
     }
-    window.selectTemplate = async function(idx, fromId){
+
+    window.selectTemplate = async (idx, fromId) => {
       selectedTemplate = templatesMeta[idx];
       renderTemplates();
-      if(fromId==='tplListMobile' && isMobile()) closeSide();
-      setError($errorTpl,"");
+      if (fromId.includes('Mobile') && isMobile()) closeSide();
+      setError($errorTpl, '');
       await updateTplTags();
       triggerAutoGenerate();
-    }
-    document.getElementById('tplSearch').addEventListener('input', renderTemplates);
-    document.getElementById('tplSearchMobile').addEventListener('input', renderTemplates);
+      saveState();
+    };
 
-    // Извлечь [[теги]] из docx
-    async function extractDocxTags(url){
-      try{
+    window.toggleFavorite = name => {
+      if (favorites.includes(name)) {
+        favorites = favorites.filter(f => f !== name);
+      } else {
+        favorites.push(name);
+      }
+      saveState();
+      renderTemplates();
+    };
+
+    $tplSearch.addEventListener('input', renderTemplates);
+    $tplSearchMobile.addEventListener('input', renderTemplates);
+
+    async function extractDocxTags(url) {
+      try {
         const res = await fetch(url);
-        if(!res.ok) throw new Error("Не удалось загрузить шаблон");
+        if (!res.ok) throw new Error('Не удалось загрузить шаблон');
         const ab = await res.arrayBuffer();
         const zip = new PizZip(ab);
-        const xmlNames = Object.keys(zip.files).filter(n=>n.startsWith('word/') && n.endsWith('.xml'));
+        const xmlNames = Object.keys(zip.files).filter(n => n.startsWith('word/') && n.endsWith('.xml'));
         const tagSet = new Set();
         const rgx = /\[\[\s*([^\]]+?)\s*\]\]/g;
-        xmlNames.forEach(name=>{
-          try{
+        xmlNames.forEach(name => {
+          try {
             const txt = zip.files[name].asText();
-            let m; while((m=rgx.exec(txt))!==null){ tagSet.add(m[1].trim().split('|')[0].trim()); }
-          }catch(_){}
+            let m;
+            while ((m = rgx.exec(txt)) !== null) {
+              tagSet.add(m[1].trim().split('|')[0].trim());
+            }
+          } catch (_) {}
         });
-        return Array.from(tagSet).sort((a,b)=>a.localeCompare(b));
-      }catch(e){ return []; }
+        return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+      } catch (e) {
+        return [];
+      }
     }
-    async function updateTplTags(){
-      if(!selectedTemplate){ currentTplTags=[]; return; }
+
+    async function updateTplTags() {
+      if (!selectedTemplate) {
+        currentTplTags = [];
+        return;
+      }
       currentTplTags = await extractDocxTags(selectedTemplate.url);
       $tplTags.innerHTML = renderChips(currentTplTags);
       updateDiagnostics();
     }
 
-    // ===== GOOGLE SHEETS =====
-    async function loadGoogleSheet(sheetId){
-      try{
+    // GOOGLE SHEETS & CSV UPLOAD
+    async function loadGoogleSheet(sheetId) {
+      $tableLoader.classList.add('active');
+      try {
+        const cached = localStorage.getItem('sheetCache');
+        const cacheTime = localStorage.getItem('sheetCacheTime');
+        if (cached && cacheTime && Date.now() - parseInt(cacheTime) < 3600 * 1000) {
+          const { headers, rows } = JSON.parse(cached);
+          excelHeaders = headers;
+          excelRows = rows;
+          renderRegistryTable();
+          $sheetHeaders.innerHTML = renderChips(excelHeaders);
+          updateDiagnostics();
+          refreshSmartFilter();
+          return;
+        }
         const res = await fetch(csvUrlFromSheetId(sheetId));
-        if(!res.ok) throw new Error("Не удалось загрузить таблицу (проверьте доступ по ссылке)");
+        if (!res.ok) throw new Error('Не удалось загрузить таблицу');
         const csv = await res.text();
-        const wb = XLSX.read(csv,{type:'string'});
+        const wb = XLSX.read(csv, { type: 'string' });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(ws,{header:1});
-        if(!json.length) throw new Error("Пустая таблица");
-        excelHeaders = json[0].map(h=>(h??"").toString().trim());
+        const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        if (!json.length) throw new Error('Пустая таблица');
+        excelHeaders = json[0].map(h => (h ?? '').toString().trim());
         excelRows = json.slice(1);
+        localStorage.setItem('sheetCache', JSON.stringify({ headers: excelHeaders, rows: excelRows }));
+        localStorage.setItem('sheetCacheTime', Date.now());
         renderRegistryTable();
         $sheetHeaders.innerHTML = renderChips(excelHeaders);
         updateDiagnostics();
-        refreshSmartFilter(); // первичное применение фильтра
-      }catch(e){
-        excelHeaders=[]; excelRows=[];
+        refreshSmartFilter();
+      } catch (e) {
+        console.error('Ошибка загрузки таблицы:', e);
+        setError($errorTpl, `Ошибка загрузки таблицы: ${e.message}`);
+        excelHeaders = [];
+        excelRows = [];
         renderRegistryTable();
-        $sheetHeaders.innerHTML = "—";
-        setError($errorTpl, e.message || "Ошибка загрузки таблицы");
+        $sheetHeaders.innerHTML = '—';
         updateDiagnostics();
+      } finally {
+        $tableLoader.classList.remove('active');
       }
     }
-    function renderRegistryTable(){
-      if(!excelHeaders.length){ $tableWrap.innerHTML=""; return; }
+
+    async function handleFileUpload(e) {
+      e.preventDefault();
+      const file = e.target.files?.[0] || e.dataTransfer?.files?.[0];
+      if (!file || !file.name.endsWith('.csv')) {
+        setError($errorTpl, 'Пожалуйста, загрузите файл .csv');
+        return;
+      }
+      try {
+        $tableLoader.classList.add('active');
+        const reader = new FileReader();
+        reader.onload = async evt => {
+          const csv = evt.target.result;
+          const wb = XLSX.read(csv, { type: 'string' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+          if (!json.length) throw new Error('Пустая таблица');
+          excelHeaders = json[0].map(h => (h ?? '').toString().trim());
+          excelRows = json.slice(1);
+          localStorage.setItem('sheetCache', JSON.stringify({ headers: excelHeaders, rows: excelRows }));
+          localStorage.setItem('sheetCacheTime', Date.now());
+          renderRegistryTable();
+          $sheetHeaders.innerHTML = renderChips(excelHeaders);
+          updateDiagnostics();
+          refreshSmartFilter();
+          setSuccess($successMsg, 'Таблица успешно загружена');
+        };
+        reader.readAsText(file);
+      } catch (e) {
+        setError($errorTpl, `Ошибка загрузки файла: ${e.message}`);
+      } finally {
+        $tableLoader.classList.remove('active');
+      }
+    }
+
+    $uploadBtn.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv';
+      input.onchange = handleFileUpload;
+      input.click();
+    });
+
+    document.addEventListener('dragover', e => e.preventDefault());
+    document.addEventListener('drop', handleFileUpload);
+
+    function renderRegistryTable() {
+      if (!excelHeaders.length) {
+        $tableWrap.innerHTML = '<div style="text-align: center; padding: 16px;">Нет данных</div>';
+        return;
+      }
       let html = `<table><thead><tr>`;
-      excelHeaders.forEach(h=> html += `<th>${h}</th>`);
+      excelHeaders.forEach(h => html += `<th>${h}</th>`);
       html += `</tr></thead><tbody>`;
-      excelRows.forEach((row,i)=>{
-        html += `<tr onclick="selectRowIndex(${i})">`;
-        excelHeaders.forEach((h,j)=> html += `<td>${row[j] ?? ''}</td>`);
+      excelRows.forEach((row, i) => {
+        const selected = $rowNumberInput.value == i + 2;
+        html += `<tr onclick="selectRowIndex(${i})" class="${selected ? 'selected' : ''}">`;
+        excelHeaders.forEach((h, j) => html += `<td>${row[j] ?? ''}</td>`);
         html += `</tr>`;
       });
       html += `</tbody></table>`;
       $tableWrap.innerHTML = html;
     }
-    window.selectRowIndex = function(i){
-      // из скрытого реестра
+
+    window.selectRowIndex = i => {
       $recordSelect.value = String(i);
       $rowNumberInput.value = i + 2;
       triggerAutoGenerate();
-      document.querySelector('#preview').scrollIntoView({behavior:'smooth', block:'start'});
-    }
+      if (isMobile()) toggle($registryDrawer);
+      document.querySelector('#preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      saveState();
+    };
 
-    // ===== ИНТЕЛЛЕКТУАЛЬНЫЕ ФИЛЬТРЫ =====
-    function parseSmartQuery(q){
+    // SMART FILTER
+    function parseSmartQuery(q) {
       const tokens = [];
       let cur = '', inQuotes = false;
-      for(let i=0;i<q.length;i++){
+      for (let i = 0; i < q.length; i++) {
         const ch = q[i];
-        if(ch === '"' || ch === '«' || ch === '»'){ inQuotes = !inQuotes; continue; }
-        if(!inQuotes && /\s/.test(ch)){
-          if(cur.trim()) tokens.push(cur.trim());
+        if (ch === '"' || ch === '«' || ch === '»') { inQuotes = !inQuotes; continue; }
+        if (!inQuotes && /\s/.test(ch)) {
+          if (cur.trim()) tokens.push(cur.trim());
           cur = '';
         } else cur += ch;
       }
-      if(cur.trim()) tokens.push(cur.trim());
+      if (cur.trim()) tokens.push(cur.trim());
       return tokens;
     }
-    function applySmartFilter(q){
-      if(!excelRows.length) return [];
+
+    function applySmartFilter(q) {
+      if (!excelRows.length) return [];
       const tokens = parseSmartQuery(q);
-      const headerIdx = new Map(excelHeaders.map((h,i)=>[h,i]));
+      const headerIdx = new Map(excelHeaders.map((h, i) => [h, i]));
       const pairs = [], free = [];
-      tokens.forEach(t=>{
+      tokens.forEach(t => {
         const eq = t.indexOf('=');
-        if(eq>0){ pairs.push({key:t.slice(0,eq).trim(), val:t.slice(eq+1).trim()}); }
+        if (eq > 0) pairs.push({ key: t.slice(0, eq).trim(), val: t.slice(eq + 1).trim() });
         else free.push(t);
       });
-      const matchVal = (cell,needle) => String(cell??'').toLowerCase().includes(String(needle).toLowerCase());
+      const matchVal = (cell, needle) => String(cell ?? '').toLowerCase().includes(String(needle).toLowerCase());
       const rowsIdx = [];
-      for(let i=0;i<excelRows.length;i++){
+      for (let i = 0; i < excelRows.length; i++) {
         const row = excelRows[i];
         let ok = true;
-        for(const {key,val} of pairs){
+        for (const { key, val } of pairs) {
           let colIndex = headerIdx.get(key);
-          if(colIndex === undefined){
+          if (colIndex === undefined) {
             const target = key.toLowerCase();
-            for(let c=0;c<excelHeaders.length;c++){
-              const aliases = makeAliases(excelHeaders[c]).map(a=>a.toLowerCase());
-              if(aliases.includes(target)){ colIndex = c; break; }
+            for (let c = 0; c < excelHeaders.length; c++) {
+              const aliases = makeAliases(excelHeaders[c]).map(a => a.toLowerCase());
+              if (aliases.includes(target)) { colIndex = c; break; }
             }
           }
-          if(colIndex === undefined || !matchVal(row[colIndex], val)){ ok = false; break; }
+          if (colIndex === undefined || !matchVal(row[colIndex], val)) { ok = false; break; }
         }
-        if(!ok) continue;
-        for(const word of free){
+        if (!ok) continue;
+        for (const word of free) {
           const hit = row.some(cell => matchVal(cell, word));
-          if(!hit){ ok = false; break; }
+          if (!hit) { ok = false; break; }
         }
-        if(ok) rowsIdx.push(i);
+        if (ok) rowsIdx.push(i);
       }
       return rowsIdx;
     }
-    function populateRecordSelect(indexes){
-      const makeLabel = (i)=>{
-        const row = excelRows[i]||[];
-        const pick = (name)=> row[(excelHeaders.indexOf(name))] || "";
-        const fio = pick("Кому_ФИО") || pick("ФИО") || "";
-        const fil = pick("Филиал") || "";
-        const tu  = pick("Номер_ТУ") || pick("Номер_документа") || "";
-        const os  = pick("ОС") || "";
-        let parts = [];
-        if(fio) parts.push(fio);
-        if(fil) parts.push(fil);
-        if(os) parts.push(os);
-        if(tu) parts.push(`ТУ:${tu}`);
-        const label = parts.join(" • ") || `Строка ${i+2}`;
-        return `${label} — №${i+2}`;
-      };
-      $recordSelect.innerHTML = `<option value="">— выберите запись —</option>` + indexes.slice(0,500).map(i=>`<option value="${i}">${makeLabel(i)}</option>`).join("");
-    }
-    function refreshSmartFilter(){
-      const q = $smartQuery.value || "";
-      const idxs = applySmartFilter(q);
-      $matchInfo.textContent = `Совпадений: ${idxs.length} / всего: ${excelRows.length}`;
-      populateRecordSelect(idxs);
-      // Автовыбор одной найденной строки
-      if(idxs.length === 1){
-        $recordSelect.value = String(idxs[0]);
-        $rowNumberInput.value = idxs[0] + 2;
-      } else if(!$rowNumberInput.value){
-        $recordSelect.value = "";
-      }
-      triggerAutoGenerate();
-    }
-    $smartQuery.addEventListener('input', refreshSmartFilter);
 
-    // Синхронизация выбора записи <-> номер строки
-    $recordSelect.addEventListener('change', ()=>{
+    function populateRecordSelect(indexes) {
+      const makeLabel = i => {
+        const row = excelRows[i] || [];
+        const pick = name => row[excelHeaders.indexOf(name)] || '';
+        const fio = pick('Кому_ФИО') || pick('ФИО') || '';
+        const fil = pick('Филиал') || '';
+        const tu = pick('Номер_ТУ') || pick('Номер_документа') || '';
+        const os = pick('ОС') || '';
+        let parts = [];
+        if (fio) parts.push(fio);
+        if (fil) parts.push(fil);
+        if (os) parts.push(os);
+        if (tu) parts.push(`ТУ:${tu}`);
+        const label = parts.join(' • ') || `Строка ${i + 2}`;
+        return `${label} — №${i + 2}`;
+      };
+      $recordSelect.innerHTML = `<option value="">— выберите запись —</option>` + indexes.slice(0, 500).map(i => `<option value="${i}">${makeLabel(i)}</option>`).join('');
+    }
+
+    function refreshSmartFilter() {
+      clearTimeout(refreshSmartFilter._t);
+      refreshSmartFilter._t = setTimeout(() => {
+        const q = $smartQuery.value || '';
+        const idxs = applySmartFilter(q);
+        $matchInfo.textContent = `Совпадений: ${idxs.length} / всего: ${excelRows.length}`;
+        populateRecordSelect(idxs);
+        if (idxs.length === 1) {
+          $recordSelect.value = String(idxs[0]);
+          $rowNumberInput.value = idxs[0] + 2;
+        } else if (!$rowNumberInput.value) {
+          $recordSelect.value = '';
+        }
+        triggerAutoGenerate();
+      }, 300);
+    }
+
+    $smartQuery.addEventListener('input', refreshSmartFilter);
+    $recordSelect.addEventListener('change', () => {
       const v = $recordSelect.value;
-      if(v!=="" && !isNaN(+v)){ $rowNumberInput.value = (+v) + 2; }
+      if (v !== '' && !isNaN(+v)) $rowNumberInput.value = (+v) + 2;
       triggerAutoGenerate();
+      saveState();
     });
 
-    // НОВОЕ: ручной ввод номера строки
-    function selectByRowNumber(){
+    $rowNumberInput.addEventListener('change', selectByRowNumber);
+    $rowNumberInput.addEventListener('keyup', e => { if (e.key === 'Enter') selectByRowNumber(); });
+
+    function selectByRowNumber() {
       const n = parseInt($rowNumberInput.value, 10);
-      if(isNaN(n) || n < 2 || n > excelRows.length + 1){
-        setError($errorTpl, "Неверный номер строки: допустимо от 2 до " + (excelRows.length + 1));
+      if (isNaN(n) || n < 2 || n > excelRows.length + 1) {
+        setError($errorTpl, `Неверный номер строки: допустимо от 2 до ${excelRows.length + 1}`);
         return;
       }
       const idx = n - 2;
-      // если индекс есть в текущем списке результатов — выберем его в селекте
       const opt = [...$recordSelect.options].find(o => o.value === String(idx));
-      if(opt) $recordSelect.value = String(idx);
-      else $recordSelect.value = ""; // вне фильтра — всё равно сгенерим по номеру
+      if (opt) $recordSelect.value = String(idx);
+      else $recordSelect.value = '';
       triggerAutoGenerate();
+      saveState();
     }
-    $rowNumberInput.addEventListener('change', selectByRowNumber);
-    $rowNumberInput.addEventListener('keyup', (e)=>{ if(e.key==='Enter') selectByRowNumber(); });
 
-    // ===== ДИАГНОСТИКА =====
-    function updateDiagnostics(){
+    // DIAGNOSTICS
+    function updateDiagnostics() {
       const hdrAliases = new Map();
-      excelHeaders.forEach(h => makeAliases(h).forEach(a => hdrAliases.set(a,h)));
+      excelHeaders.forEach(h => makeAliases(h).forEach(a => hdrAliases.set(a, h)));
       const missing = [];
       const used = new Set();
-      currentTplTags.forEach(tag=>{
-        const cands = uniq([tag, tag.toLowerCase(), normalizeKey(tag), normalizeKey(tag).toLowerCase(), tag.replace(/\s+/g,'_'), tag.replace(/_/g,' ')]);
+      currentTplTags.forEach(tag => {
+        const cands = uniq([tag, tag.toLowerCase(), normalizeKey(tag), normalizeKey(tag).toLowerCase(), tag.replace(/\s+/g, '_'), tag.replace(/_/g, ' ')]);
         let matched = null;
-        for(const c of cands){ if(hdrAliases.has(c)){ matched = hdrAliases.get(c); break; } }
-        if(!matched) missing.push(tag); else used.add(matched);
+        for (const c of cands) {
+          if (hdrAliases.has(c)) { matched = hdrAliases.get(c); break; }
+        }
+        if (!matched) missing.push(tag); else used.add(matched);
       });
-      const unused = excelHeaders.filter(h=>!used.has(h));
+      const unused = excelHeaders.filter(h => !used.has(h));
       $missingInSheet.innerHTML = renderChips(missing);
       $unusedHeaders.innerHTML = renderChips(unused);
     }
 
-    // ===== ГЕНЕРАЦИЯ DOCX + PREVIEW (авто) =====
-    async function autoGenerate(){
-      setError($errorTpl,""); lastGeneratedBlob = null;
-      // приоритет: если задан номер строки — берём его, иначе — выбранный из списка
+    // GENERATION
+    async function autoGenerate() {
+      setError($errorTpl, '');
+      lastGeneratedBlob = null;
       let recIdx = null;
-      if($rowNumberInput.value){
-        const n = parseInt($rowNumberInput.value,10);
-        if(!isNaN(n) && n>=2 && n<=excelRows.length+1) recIdx = n - 2;
+      if ($rowNumberInput.value) {
+        const n = parseInt($rowNumberInput.value, 10);
+        if (!isNaN(n) && n >= 2 && n <= excelRows.length + 1) recIdx = n - 2;
       }
-      if(recIdx===null && $recordSelect.value) recIdx = parseInt($recordSelect.value,10);
-
-      if(!selectedTemplate || recIdx===null || isNaN(recIdx)){ clearPreview(); return; }
-
-      try{
+      if (recIdx === null && $recordSelect.value) recIdx = parseInt($recordSelect.value, 10);
+      if (!selectedTemplate || recIdx === null || isNaN(recIdx)) {
+        clearPreview();
+        return;
+      }
+      try {
         const res = await fetch(selectedTemplate.url);
-        if(!res.ok) throw new Error("Не удалось загрузить шаблон");
+        if (!res.ok) throw new Error('Не удалось загрузить шаблон');
         const ab = await res.arrayBuffer();
         const zip = new PizZip(ab);
-
-        const doc = new window.docxtemplater(zip, { delimiters:{start:'[[', end:']]'} });
+        const doc = new window.docxtemplater(zip, { delimiters: { start: '[[', end: ']]' } });
         const data = buildDataObject(excelHeaders, excelRows[recIdx]);
         doc.setData(data);
-        try{ doc.render(); }
-        catch(e){
-          let details = "";
-          if(e.properties?.errors){ details = e.properties.errors.map(err=>`• ${err.properties?.explanation || err.message || "Ошибка"}`).join("\n"); }
-          throw new Error("Ошибка формирования шаблона.\n" + details);
+        try {
+          doc.render();
+        } catch (e) {
+          let details = '';
+          if (e.properties?.errors) {
+            details = e.properties.errors.map(err => `• ${err.properties?.explanation || err.message || 'Ошибка'}`).join('\n');
+          }
+          throw new Error(`Ошибка формирования шаблона:\n${details}`);
         }
-
-        const out = doc.getZip().generate({ type:"blob" });
-        lastGeneratedBlob = out;
-
-        const buf = await out.arrayBuffer();
-        const result = await window.mammoth.convertToHtml({ arrayBuffer:buf });
-        $preview.innerHTML = result.value || "<i>(Превью пустое — но .docx сформирован)</i>";
+        lastGeneratedBlob = doc.getZip().generate({ type: 'blob' });
+        const buf = await lastGeneratedBlob.arrayBuffer();
+        const result = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+        $preview.innerHTML = result.value || '<i>(Превью пустое — но .docx сформирован)</i>';
         $downloadBtn.disabled = false;
         $copyBtn.disabled = false;
-
-        if(isMobile()){ document.querySelector('#preview').scrollIntoView({behavior:'smooth', block:'start'}); }
-      }catch(e){
-        console.error(e); setError($errorTpl, e.message || "Ошибка формирования");
-        $downloadBtn.disabled = true; $copyBtn.disabled = true;
+        if (isMobile()) document.querySelector('#preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (e) {
+        console.error(e);
+        setError($errorTpl, e.message || 'Ошибка формирования');
+        $downloadBtn.disabled = true;
+        $copyBtn.disabled = true;
       }
     }
-    function triggerAutoGenerate(){
+
+    function triggerAutoGenerate() {
       clearTimeout(triggerAutoGenerate._t);
       triggerAutoGenerate._t = setTimeout(autoGenerate, 150);
     }
 
-    // Скачать .docx
-    function downloadDocx(){
-      if(!lastGeneratedBlob || !selectedTemplate) return;
-      const a = document.createElement("a");
+    $generateBtn.addEventListener('click', triggerAutoGenerate);
+
+    function downloadDocx() {
+      if (!lastGeneratedBlob || !selectedTemplate) return;
+      const a = document.createElement('a');
       const url = URL.createObjectURL(lastGeneratedBlob);
       a.href = url;
-      const clean = selectedTemplate.name.replace(/\.docx$/i,'');
-      const rec = $rowNumberInput.value ? parseInt($rowNumberInput.value,10) : ($recordSelect.value ? (parseInt($recordSelect.value,10)+2) : 'X');
+      const clean = selectedTemplate.name.replace(/\.docx$/i, '');
+      const rec = $rowNumberInput.value ? parseInt($rowNumberInput.value, 10) : ($recordSelect.value ? (parseInt($recordSelect.value, 10) + 2) : 'X');
       a.download = `${clean}_строка_${rec}.docx`;
-      document.body.appendChild(a); a.click(); a.remove();
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
       URL.revokeObjectURL(url);
+      setSuccess($successMsg, 'Письмо скачано');
     }
-    document.getElementById('downloadBtn').addEventListener('click', downloadDocx);
 
-    // Скопировать письмо
-    async function copyLetter(){
+    $downloadBtn.addEventListener('click', downloadDocx);
+
+    async function copyLetter() {
       const html = $preview.innerHTML;
-      if(!html) return;
-      try{
-        const blobHtml = new Blob([html], { type: "text/html" });
-        const blobText = new Blob([ $preview.innerText || $preview.textContent || "" ], { type: "text/plain" });
-        const data = [ new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText }) ];
+      if (!html) return;
+      try {
+        const blobHtml = new Blob([html], { type: 'text/html' });
+        const blobText = new Blob([$preview.innerText || $preview.textContent || ''], { type: 'text/plain' });
+        const data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
         await navigator.clipboard.write(data);
-      }catch(_){
+      } catch (_) {
         const range = document.createRange();
         range.selectNodeContents($preview);
         const sel = window.getSelection();
-        sel.removeAllRanges(); sel.addRange(range);
+        sel.removeAllRanges();
+        sel.addRange(range);
         document.execCommand('copy');
         sel.removeAllRanges();
       }
-      const btn = document.getElementById('copyBtn');
-      const old = btn.textContent; btn.textContent = "Скопировано!";
-      setTimeout(()=> btn.textContent = old, 1200);
+      setSuccess($successMsg, 'Письмо скопировано');
     }
-    document.getElementById('copyBtn').addEventListener('click', copyLetter);
 
-    // Тумблеры спрятанных секций
-    function toggle(el){ el.classList.toggle('open'); }
-    $toggleRegistry.addEventListener('click', ()=> toggle($registryDrawer));
-    $toggleDiag.addEventListener('click', ()=> toggle($diagDrawer));
+    $copyBtn.addEventListener('click', copyLetter);
 
-    // Инициализация
-    (function init(){
+    function toggle(el) {
+      el.classList.toggle('open');
+    }
+
+    $toggleRegistry.addEventListener('click', () => toggle($registryDrawer));
+    $toggleDiag.addEventListener('click', () => toggle($diagDrawer));
+
+    // INITIALIZATION
+    (function init() {
       fetchTemplatesList();
       loadGoogleSheet(DEFAULT_GOOGLE_SHEET_ID);
-      setTimeout(()=> document.getElementById('smartQuery').focus(), 300);
+      setTimeout(() => $smartQuery.focus(), 300);
     })();
   </script>
 </body>
