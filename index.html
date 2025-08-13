@@ -2,10 +2,22 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Автоматизация писем</title>
+  <title>Автоматизация писем (.docx + Google Sheets)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <!-- Шрифты UI (не влияют на docx) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Табличный парсер (для CSV Google Sheets) -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <!-- DocxTemplater + PizZip (подстановка в .docx) -->
+  <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.38.0/build/docxtemplater.js"></script>
+
+  <!-- Mammoth: превью .docx как HTML в браузере -->
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+
   <style>
     :root {
       --primary: #1a73e8;
@@ -20,18 +32,19 @@
     body { font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text); line-height: 1.5; }
     #container { display: flex; min-height: 100vh; }
     #sidebar {
-      width: 260px;
+      width: 280px;
       background: var(--sidebar-bg);
       color: #fff;
       padding: 20px;
       box-shadow: 2px 0 8px rgba(0,0,0,0.1);
       overflow-y: auto;
     }
-    #sidebar h3 { font-size: 18px; margin-bottom: 15px; font-weight: 600; }
+    #sidebar h3 { font-size: 18px; margin-bottom: 12px; font-weight: 600; }
+    #sidebar .note { font-size: 12px; opacity: .85; margin-bottom: 10px; }
     #sidebar button {
       width: 100%;
       padding: 12px;
-      margin: 5px 0;
+      margin: 6px 0;
       background: #334466;
       border: none;
       color: #fff;
@@ -43,231 +56,273 @@
     }
     #sidebar button:hover { background: #405080; }
     #sidebar button.active { background: var(--primary); font-weight: 500; }
-    #main { display: none; }
-    #right {
-      flex: 1;
-      padding: 20px;
-      background: #fff;
-      overflow-y: auto;
-    }
-    #right h3 { font-size: 18px; margin-bottom: 15px; font-weight: 600; }
-    .excel-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      font-size: 14px;
-    }
+
+    #right { flex: 1; padding: 20px; background: #fff; overflow-y: auto; }
+    #right h3 { font-size: 18px; margin: 12px 0; font-weight: 600; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 1000px) { .row { grid-template-columns: 1fr; } }
+
+    .excel-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; }
     .excel-table th, .excel-table td {
-      border: 1px solid var(--border);
-      padding: 10px;
-      text-align: left;
+      border: 1px solid var(--border); padding: 8px 10px; text-align: left;
     }
-    .excel-table th { background: #f1f3f5; font-weight: 500; }
+    .excel-table th { background: #f1f3f5; font-weight: 500; position: sticky; top: 0; z-index: 1; }
     .excel-table tr:hover { background: var(--hover); cursor: pointer; }
     .excel-table tr.selected { background: #d1e7ff; }
-    #tableArea { max-height: 300px; overflow-y: auto; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 6px; }
-    #templateArea {
-      min-height: 200px;
-      background: var(--bg-light);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 15px;
-      margin-bottom: 20px;
-      font-size: 14px;
-      overflow-x: auto;
+    #tableWrap { max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+
+    .card {
+      border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 12px;
     }
-    #rowInput {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 14px;
-      margin-bottom: 10px;
+    .controls { display: grid; grid-template-columns: 170px 1fr 170px; gap: 10px; align-items: center; margin: 8px 0 4px; }
+    @media (max-width: 700px) { .controls { grid-template-columns: 1fr; } }
+
+    input[type="number"], input[type="text"] {
+      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
     }
-    #generateButton, #copyButton {
-      width: 100%;
-      padding: 12px;
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      font-size: 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-bottom: 10px;
-      transition: background 0.2s;
+    .btn-primary, .btn-secondary {
+      width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; transition: .2s;
     }
-    #generateButton:hover, #copyButton:hover { background: #1557b0; }
-    #finalLetter {
-      min-height: 200px;
-      background: var(--bg-light);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 15px;
-      font-size: 14px;
-      overflow-x: auto;
-    }
-    .letter-html table { border-collapse: collapse; }
-    .letter-html th, .letter-html td { border: 1px solid var(--border); padding: 6px 10px; }
-    .error { color: var(--error); font-size: 14px; margin-bottom: 10px; }
-    @media (max-width: 900px) {
-      #container { flex-direction: column; }
-      #sidebar, #right { width: 100%; }
-      #sidebar { position: sticky; top: 0; z-index: 10; }
-      #right { padding: 15px; }
-    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #1557b0; }
+    .btn-secondary { background: #efefef; }
+    .btn-secondary:hover { background: #e2e2e2; }
+
+    .error { color: var(--error); font-size: 14px; margin: 6px 0; }
+    .muted { font-size: 12px; opacity: .85; }
+    #preview { min-height: 220px; border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: var(--bg-light); overflow: auto; }
   </style>
 </head>
 <body>
   <div id="container">
-    <div id="sidebar">
-      <h3>Шаблоны писем</h3>
-      <div id="templatesList">Загрузка...</div>
-    </div>
-    <div id="main"></div>
-    <div id="right">
-      <h3>Реестр заявок</h3>
-      <div id="tableArea"></div>
-      <h3>Форма письма</h3>
-      <div id="templateArea" class="letter-html">Выберите шаблон письма и строку из реестра.</div>
-      <input type="number" id="rowInput" placeholder="Введите номер строки реестра" min="2">
-      <button id="generateButton" onclick="generateLetter()">Сформировать письмо</button>
-      <div id="errorArea" class="error"></div>
-      <h3>Итоговое письмо</h3>
-      <button id="copyButton" onclick="copyLetter()" style="display: none;">Копировать письмо</button>
-      <div id="finalLetter" class="letter-html"></div>
-    </div>
+    <aside id="sidebar">
+      <h3>Шаблоны (.docx)</h3>
+      <div class="note">Теги вида <code>{{Поле}}</code>. Шрифты/отступы — как в Word.</div>
+      <div id="templatesList">Загрузка…</div>
+    </aside>
+
+    <main id="right">
+      <div class="row">
+        <section class="card">
+          <h3>Реестр (Google Sheets)</h3>
+          <div class="controls">
+            <input type="text" id="sheetIdInput" placeholder="Вставьте ID Google-таблицы">
+            <input type="number" id="rowInput" placeholder="№ строки (начиная со 2)" min="2">
+            <button class="btn-secondary" id="reloadSheetBtn">Обновить</button>
+          </div>
+          <div id="tableWrap"></div>
+          <div id="errorTable" class="error"></div>
+          <div class="muted">Подсказка: клик по строке подставит её номер.</div>
+        </section>
+
+        <section class="card">
+          <h3>Форма письма (превью)</h3>
+          <div id="preview">Выберите шаблон и строку реестра.</div>
+          <div id="errorTpl" class="error"></div>
+          <div class="controls" style="grid-template-columns: 1fr 1fr;">
+            <button class="btn-primary" id="generateBtn">Сформировать превью</button>
+            <button class="btn-secondary" id="downloadBtn" disabled>Скачать .docx</button>
+          </div>
+          <div class="muted">Превью отражает текст и базовую разметку. Итоговый .docx — 1:1 как шаблон (шрифты, отступы, поля).</div>
+        </section>
+      </div>
+    </main>
   </div>
+
   <script>
+    // ====== НАСТРОЙКИ ======
     const GITHUB_USER = "anatoliy031";
     const GITHUB_REPO = "letter-automation";
     const GITHUB_TEMPLATES_FOLDER = "templates";
-    const GOOGLE_SHEET_ID = "1-P3T-ik_gU7qrr0KGDFbxQ80F70_Z8K5QT4siN31Or4";
 
-    let templatesMeta = [];
-    let currentTemplateName = '';
-    let currentTemplateContent = '';
-    let excelData = [];
-    let headers = [];
+    // Если хочешь — оставь текущий ID. Можно менять прямо в UI.
+    const DEFAULT_GOOGLE_SHEET_ID = "1-P3T-ik_gU7qrr0KGDFbxQ80F70_Z8K5QT4siN31Or4";
 
+    // ====== СОСТОЯНИЕ ======
+    let templatesMeta = [];          // [{name, download_url}, …]
+    let selectedTemplate = null;     // объект из templatesMeta
+    let excelHeaders = [];           // заголовки из Google Sheets
+    let excelRows = [];              // массив строк данных
+    let lastGeneratedBlob = null;    // последний собранный .docx (Blob)
+
+    // ====== UI ЭЛЕМЕНТЫ ======
+    const $tplList = document.getElementById('templatesList');
+    const $tableWrap = document.getElementById('tableWrap');
+    const $rowInput = document.getElementById('rowInput');
+    const $sheetIdInput = document.getElementById('sheetIdInput');
+    const $reloadSheetBtn = document.getElementById('reloadSheetBtn');
+    const $preview = document.getElementById('preview');
+    const $errorTpl = document.getElementById('errorTpl');
+    const $errorTable = document.getElementById('errorTable');
+    const $generateBtn = document.getElementById('generateBtn');
+    const $downloadBtn = document.getElementById('downloadBtn');
+
+    // ====== HELPERS ======
+    function setError(el, msg) { el.textContent = msg || ""; }
+    function clearPreview() { $preview.innerHTML = "Выберите шаблон и строку реестра."; }
+    function csvUrlFromSheetId(id) {
+      return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
+    }
+
+    // Нормализация ключей не нужна, если в шаблоне и заголовках полное совпадение (без пробелов в тегах).
+    function makeDataObject(headers, row) {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = row[i] ?? ""; });
+      return obj;
+    }
+
+    // ====== ЗАГРУЗКА ШАБЛОНОВ (.docx) ИЗ GITHUB ======
     async function fetchTemplatesList() {
       try {
         const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
         const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error('Не удалось загрузить шаблоны');
+        if (!res.ok) throw new Error("GitHub API error");
         const files = await res.json();
-        templatesMeta = files.filter(f => /\.html$/i.test(f.name));
+        templatesMeta = files.filter(f => /\.docx$/i.test(f.name));
         renderTemplatesList();
       } catch (e) {
-        document.getElementById('templatesList').innerHTML = 'Ошибка загрузки шаблонов';
+        $tplList.innerHTML = "Ошибка загрузки шаблонов";
       }
     }
 
     function renderTemplatesList() {
-      let html = '';
-      templatesMeta.forEach((tpl, idx) => {
-        html += `<button onclick="selectTemplate('${tpl.name}')" id="tplbtn-${idx}" title="${tpl.name.replace(/\.html$/i, '')}">${tpl.name.replace(/\.html$/i, '')}</button>`;
-      });
-      document.getElementById('templatesList').innerHTML = html || 'Нет шаблонов';
-    }
-
-    async function selectTemplate(name) {
-      try {
-        currentTemplateName = name;
-        currentTemplateContent = '';
-        document.querySelectorAll('#templatesList button').forEach(btn => btn.classList.remove('active'));
-        const idx = templatesMeta.findIndex(t => t.name === name);
-        if (idx >= 0) document.getElementById(`tplbtn-${idx}`).classList.add('active');
-        const rawUrl = templatesMeta[idx].download_url;
-        const res = await fetch(rawUrl);
-        if (!res.ok) throw new Error('Не удалось загрузить шаблон');
-        const text = await res.text();
-        currentTemplateContent = text;
-        document.getElementById('templateArea').innerHTML = text;
-        document.getElementById('finalLetter').innerHTML = '';
-        document.getElementById('copyButton').style.display = 'none';
-        document.getElementById('errorArea').innerText = '';
-      } catch (e) {
-        document.getElementById('templateArea').innerText = 'Ошибка загрузки шаблона';
+      if (!templatesMeta.length) {
+        $tplList.innerHTML = "Нет .docx-шаблонов в папке /templates";
+        return;
       }
+      $tplList.innerHTML = templatesMeta.map((t, idx) =>
+        `<button id="tplbtn-${idx}" onclick="selectTemplate(${idx})" title="${t.name.replace(/\.docx$/i,'')}">${t.name.replace(/\.docx$/i,'')}</button>`
+      ).join("");
     }
 
-    async function loadGoogleSheet() {
+    window.selectTemplate = function(idx) {
+      document.querySelectorAll('#templatesList button').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById(`tplbtn-${idx}`);
+      if (btn) btn.classList.add('active');
+      selectedTemplate = templatesMeta[idx];
+      setError($errorTpl, "");
+      clearPreview();
+      $downloadBtn.disabled = true;
+      lastGeneratedBlob = null;
+    }
+
+    // ====== ЗАГРУЗКА GOOGLE SHEETS (CSV) ======
+    async function loadGoogleSheet(sheetId) {
       try {
-        const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv`;
-        const res = await fetch(csvUrl);
-        if (!res.ok) throw new Error('Не удалось загрузить таблицу');
+        setError($errorTable, "");
+        const res = await fetch(csvUrlFromSheetId(sheetId));
+        if (!res.ok) throw new Error("Не удалось загрузить таблицу (проверьте доступ)");
         const csv = await res.text();
-        const workbook = XLSX.read(csv, { type: 'string' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-        headers = json[0];
-        excelData = json.slice(1);
+        const wb = XLSX.read(csv, { type: 'string' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        if (!json.length) throw new Error("Пустая таблица");
+        excelHeaders = json[0];
+        excelRows = json.slice(1);
         renderTable();
       } catch (e) {
-        document.getElementById('tableArea').innerHTML = 'Ошибка загрузки таблицы';
+        $tableWrap.innerHTML = "";
+        setError($errorTable, e.message || "Ошибка загрузки таблицы");
       }
     }
 
     function renderTable() {
-      let html = `<table class="excel-table"><tr>`;
-      headers.forEach(h => html += `<th>${h}</th>`);
-      html += `</tr>`;
-      excelData.forEach((row, idx) => {
-        html += `<tr onclick="selectRow(${idx})" class="${document.getElementById('rowInput').value - 2 === idx ? 'selected' : ''}">`;
-        headers.forEach((h, j) => html += `<td>${row[j] || ''}</td>`);
+      if (!excelHeaders.length) { $tableWrap.innerHTML = ""; return; }
+      let html = `<table class="excel-table"><thead><tr>`;
+      excelHeaders.forEach(h => html += `<th>${h}</th>`);
+      html += `</tr></thead><tbody>`;
+      excelRows.forEach((row, i) => {
+        html += `<tr onclick="pickRow(${i})" class="${(parseInt($rowInput.value)-2===i)?'selected':''}">`;
+        excelHeaders.forEach((h, j) => html += `<td>${row[j] ?? ''}</td>`);
         html += `</tr>`;
       });
-      html += `</table>`;
-      document.getElementById('tableArea').innerHTML = html;
+      html += `</tbody></table>`;
+      $tableWrap.innerHTML = html;
     }
 
-    function selectRow(idx) {
-      document.getElementById('rowInput').value = idx + 2;
-      generateLetter();
-    }
-
-    function generateLetter() {
-      const errorArea = document.getElementById('errorArea');
-      errorArea.innerText = '';
-      if (!currentTemplateContent) {
-        errorArea.innerText = 'Выберите шаблон письма';
-        return;
-      }
-      const rowNum = parseInt(document.getElementById('rowInput').value);
-      if (isNaN(rowNum) || rowNum < 2 || rowNum - 2 >= excelData.length) {
-        errorArea.innerText = 'Введите корректный номер строки';
-        return;
-      }
-      const row = excelData[rowNum - 2];
-      let letter = currentTemplateContent;
-      headers.forEach((h, j) => {
-        const regex = new RegExp(`{${h}}`, 'g');
-        letter = letter.replace(regex, row[j] || '');
-      });
-      document.getElementById('finalLetter').innerHTML = letter;
-      document.getElementById('copyButton').style.display = 'block';
+    window.pickRow = function(i) {
+      $rowInput.value = i + 2;
       renderTable();
     }
 
-    function copyLetter() {
-      const finalLetter = document.getElementById('finalLetter');
-      const range = document.createRange();
-      range.selectNodeContents(finalLetter);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      document.execCommand('copy');
-      selection.removeAllRanges();
-      const copyButton = document.getElementById('copyButton');
-      copyButton.innerText = 'Скопировано!';
-      setTimeout(() => { copyButton.innerText = 'Копировать письмо'; }, 2000);
+    // ====== ГЕНЕРАЦИЯ ПИСЬМА: DOCX + PREVIEW ======
+    async function fetchArrayBuffer(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Не удалось загрузить шаблон");
+      return await res.arrayBuffer();
     }
 
-    // Автоматическое обновление реестра каждые 5 минут
-    setInterval(loadGoogleSheet, 5 * 60 * 1000);
+    async function generateDocxAndPreview() {
+      setError($errorTpl, "");
+      $downloadBtn.disabled = true;
+      lastGeneratedBlob = null;
 
+      if (!selectedTemplate) {
+        setError($errorTpl, "Выберите шаблон (.docx) слева");
+        return;
+      }
+      const rowNum = parseInt($rowInput.value);
+      if (isNaN(rowNum) || rowNum < 2 || rowNum - 2 >= excelRows.length) {
+        setError($errorTpl, "Введите корректный номер строки реестра");
+        return;
+      }
+
+      try {
+        // 1) Загружаем .docx как бинарь
+        const ab = await fetchArrayBuffer(selectedTemplate.download_url);
+        const zip = new PizZip(ab);
+
+        // 2) Подставляем данные
+        const doc = new window.docxtemplater().loadZip(zip);
+        const data = makeDataObject(excelHeaders, excelRows[rowNum - 2]);
+        doc.setData(data);
+        doc.render();
+
+        // 3) Генерим Blob .docx
+        const out = doc.getZip().generate({ type: "blob" });
+        lastGeneratedBlob = out;
+
+        // 4) Превью через mammoth
+        const arrayBuffer = await out.arrayBuffer();
+        const result = await window.mammoth.convertToHtml({ arrayBuffer });
+        $preview.innerHTML = result.value; // HTML
+        $downloadBtn.disabled = false;
+      } catch (e) {
+        console.error(e);
+        setError($errorTpl, "Ошибка формирования. Проверьте, что теги {{...}} совпадают с заголовками столбцов.");
+      }
+    }
+
+    function downloadDocx() {
+      if (!lastGeneratedBlob || !selectedTemplate) return;
+      const a = document.createElement("a");
+      const url = URL.createObjectURL(lastGeneratedBlob);
+      a.href = url;
+      // Имя файла: <имя_шаблона>_<N-строки>.docx
+      const cleanName = selectedTemplate.name.replace(/\.docx$/i, '');
+      const rowNum = parseInt($rowInput.value) || 'X';
+      a.download = `${cleanName}_${rowNum}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // ====== СВЯЗКА UI ======
+    $sheetIdInput.value = DEFAULT_GOOGLE_SHEET_ID;
+    $reloadSheetBtn.addEventListener('click', () => loadGoogleSheet($sheetIdInput.value.trim()));
+    $generateBtn.addEventListener('click', generateDocxAndPreview);
+    $downloadBtn.addEventListener('click', downloadDocx);
+
+    // Автообновление таблицы каждые 5 минут
+    setInterval(() => {
+      const id = $sheetIdInput.value.trim();
+      if (id) loadGoogleSheet(id);
+    }, 5 * 60 * 1000);
+
+    // Первичная загрузка
     fetchTemplatesList();
-    loadGoogleSheet();
+    loadGoogleSheet(DEFAULT_GOOGLE_SHEET_ID);
   </script>
 </body>
 </html>
