@@ -5,17 +5,17 @@
   <title>Автоматизация писем (.docx + Google Sheets)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Шрифты UI (не влияют на docx) -->
+  <!-- UI-шрифты (не влияют на .docx) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Табличный парсер (для CSV Google Sheets) -->
+  <!-- Парсер CSV Google Sheets -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
-  <!-- DocxTemplater + PizZip (подстановка в .docx) -->
+  <!-- DocxTemplater + PizZip для подстановки в .docx -->
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.38.0/build/docxtemplater.js"></script>
 
-  <!-- Mammoth: превью .docx как HTML в браузере -->
+  <!-- Превью .docx как HTML -->
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 
   <style>
@@ -74,7 +74,7 @@
     .card {
       border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 12px;
     }
-    .controls { display: grid; grid-template-columns: 170px 1fr 170px; gap: 10px; align-items: center; margin: 8px 0 4px; }
+    .controls { display: grid; grid-template-columns: 1fr 200px 170px; gap: 10px; align-items: center; margin: 8px 0 4px; }
     @media (max-width: 700px) { .controls { grid-template-columns: 1fr; } }
 
     input[type="number"], input[type="text"] {
@@ -106,13 +106,13 @@
         <section class="card">
           <h3>Реестр (Google Sheets)</h3>
           <div class="controls">
-            <input type="text" id="sheetIdInput" placeholder="Вставьте ID Google-таблицы">
-            <input type="number" id="rowInput" placeholder="№ строки (начиная со 2)" min="2">
+            <input type="text" id="sheetIdInput" placeholder="ID Google-таблицы">
+            <input type="number" id="rowInput" placeholder="№ строки (со 2)" min="2">
             <button class="btn-secondary" id="reloadSheetBtn">Обновить</button>
           </div>
           <div id="tableWrap"></div>
           <div id="errorTable" class="error"></div>
-          <div class="muted">Подсказка: клик по строке подставит её номер.</div>
+          <div class="muted">Клик по строке — подставит её номер.</div>
         </section>
 
         <section class="card">
@@ -123,7 +123,7 @@
             <button class="btn-primary" id="generateBtn">Сформировать превью</button>
             <button class="btn-secondary" id="downloadBtn" disabled>Скачать .docx</button>
           </div>
-          <div class="muted">Превью отражает текст и базовую разметку. Итоговый .docx — 1:1 как шаблон (шрифты, отступы, поля).</div>
+          <div class="muted">Превью — текст и базовая разметка. Итоговый .docx — 1:1 как шаблон (шрифты, отступы, поля).</div>
         </section>
       </div>
     </main>
@@ -135,17 +135,17 @@
     const GITHUB_REPO = "letter-automation";
     const GITHUB_TEMPLATES_FOLDER = "templates";
 
-    // Если хочешь — оставь текущий ID. Можно менять прямо в UI.
-    const DEFAULT_GOOGLE_SHEET_ID = "1-P3T-ik_gU7qrr0KGDFbxQ80F70_Z8K5QT4siN31Or4";
+    // НОВЫЙ ID Google-таблицы
+    const DEFAULT_GOOGLE_SHEET_ID = "17vdbh0KHIZ-lAsqFXp6HtQA-NBymV5Wh";
 
     // ====== СОСТОЯНИЕ ======
-    let templatesMeta = [];          // [{name, download_url}, …]
-    let selectedTemplate = null;     // объект из templatesMeta
-    let excelHeaders = [];           // заголовки из Google Sheets
-    let excelRows = [];              // массив строк данных
-    let lastGeneratedBlob = null;    // последний собранный .docx (Blob)
+    let templatesMeta = [];
+    let selectedTemplate = null;
+    let excelHeaders = [];
+    let excelRows = [];
+    let lastGeneratedBlob = null;
 
-    // ====== UI ЭЛЕМЕНТЫ ======
+    // ====== UI ======
     const $tplList = document.getElementById('templatesList');
     const $tableWrap = document.getElementById('tableWrap');
     const $rowInput = document.getElementById('rowInput');
@@ -163,15 +163,13 @@
     function csvUrlFromSheetId(id) {
       return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
     }
-
-    // Нормализация ключей не нужна, если в шаблоне и заголовках полное совпадение (без пробелов в тегах).
     function makeDataObject(headers, row) {
       const obj = {};
       headers.forEach((h, i) => { obj[h] = row[i] ?? ""; });
       return obj;
     }
 
-    // ====== ЗАГРУЗКА ШАБЛОНОВ (.docx) ИЗ GITHUB ======
+    // ====== ШАБЛОНЫ (.docx) ИЗ GITHUB ======
     async function fetchTemplatesList() {
       try {
         const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
@@ -187,7 +185,7 @@
 
     function renderTemplatesList() {
       if (!templatesMeta.length) {
-        $tplList.innerHTML = "Нет .docx-шаблонов в папке /templates";
+        $tplList.innerHTML = "Нет .docx-шаблонов в /templates";
         return;
       }
       $tplList.innerHTML = templatesMeta.map((t, idx) =>
@@ -206,12 +204,12 @@
       lastGeneratedBlob = null;
     }
 
-    // ====== ЗАГРУЗКА GOOGLE SHEETS (CSV) ======
+    // ====== GOOGLE SHEETS (CSV) ======
     async function loadGoogleSheet(sheetId) {
       try {
         setError($errorTable, "");
         const res = await fetch(csvUrlFromSheetId(sheetId));
-        if (!res.ok) throw new Error("Не удалось загрузить таблицу (проверьте доступ)");
+        if (!res.ok) throw new Error("Не удалось загрузить таблицу (проверьте доступ по ссылке)");
         const csv = await res.text();
         const wb = XLSX.read(csv, { type: 'string' });
         const ws = wb.Sheets[wb.SheetNames[0]];
@@ -245,7 +243,7 @@
       renderTable();
     }
 
-    // ====== ГЕНЕРАЦИЯ ПИСЬМА: DOCX + PREVIEW ======
+    // ====== ГЕНЕРАЦИЯ DOCX + PREVIEW ======
     async function fetchArrayBuffer(url) {
       const res = await fetch(url);
       if (!res.ok) throw new Error("Не удалось загрузить шаблон");
@@ -268,28 +266,24 @@
       }
 
       try {
-        // 1) Загружаем .docx как бинарь
         const ab = await fetchArrayBuffer(selectedTemplate.download_url);
         const zip = new PizZip(ab);
 
-        // 2) Подставляем данные
         const doc = new window.docxtemplater().loadZip(zip);
         const data = makeDataObject(excelHeaders, excelRows[rowNum - 2]);
         doc.setData(data);
         doc.render();
 
-        // 3) Генерим Blob .docx
         const out = doc.getZip().generate({ type: "blob" });
         lastGeneratedBlob = out;
 
-        // 4) Превью через mammoth
         const arrayBuffer = await out.arrayBuffer();
         const result = await window.mammoth.convertToHtml({ arrayBuffer });
-        $preview.innerHTML = result.value; // HTML
+        $preview.innerHTML = result.value;
         $downloadBtn.disabled = false;
       } catch (e) {
         console.error(e);
-        setError($errorTpl, "Ошибка формирования. Проверьте, что теги {{...}} совпадают с заголовками столбцов.");
+        setError($errorTpl, "Ошибка формирования. Проверьте совпадение тегов {{...}} и заголовков столбцов.");
       }
     }
 
@@ -298,7 +292,6 @@
       const a = document.createElement("a");
       const url = URL.createObjectURL(lastGeneratedBlob);
       a.href = url;
-      // Имя файла: <имя_шаблона>_<N-строки>.docx
       const cleanName = selectedTemplate.name.replace(/\.docx$/i, '');
       const rowNum = parseInt($rowInput.value) || 'X';
       a.download = `${cleanName}_${rowNum}.docx`;
@@ -314,7 +307,7 @@
     $generateBtn.addEventListener('click', generateDocxAndPreview);
     $downloadBtn.addEventListener('click', downloadDocx);
 
-    // Автообновление таблицы каждые 5 минут
+    // Автообновление каждые 5 минут
     setInterval(() => {
       const id = $sheetIdInput.value.trim();
       if (id) loadGoogleSheet(id);
