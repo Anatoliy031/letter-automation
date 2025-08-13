@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Автоматизация писем (.docx + Google Sheets)</title>
+  <meta charset="UTF-8" />
+  <title>Автоматизация писем (.docx + Google Sheets) — с диагностикой тегов</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- UI-шрифты (не влияют на .docx) -->
+  <!-- UI шрифт (на .docx не влияет) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Парсер CSV Google Sheets -->
+  <!-- CSV/Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
-  <!-- DocxTemplater + PizZip для подстановки в .docx -->
+  <!-- DocxTemplater + PizZip -->
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.38.0/build/docxtemplater.js"></script>
 
@@ -27,70 +27,60 @@
       --bg-light: #f8f9fa;
       --hover: #e8f0fe;
       --error: #d32f2f;
+      --ok: #188038;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text); line-height: 1.5; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text); }
     #container { display: flex; min-height: 100vh; }
-    #sidebar {
-      width: 280px;
-      background: var(--sidebar-bg);
-      color: #fff;
-      padding: 20px;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-      overflow-y: auto;
-    }
-    #sidebar h3 { font-size: 18px; margin-bottom: 12px; font-weight: 600; }
-    #sidebar .note { font-size: 12px; opacity: .85; margin-bottom: 10px; }
-    #sidebar button {
-      width: 100%;
-      padding: 12px;
-      margin: 6px 0;
-      background: #334466;
-      border: none;
-      color: #fff;
-      font-size: 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: left;
-      transition: background 0.2s;
-    }
-    #sidebar button:hover { background: #405080; }
-    #sidebar button.active { background: var(--primary); font-weight: 500; }
 
-    #right { flex: 1; padding: 20px; background: #fff; overflow-y: auto; }
-    #right h3 { font-size: 18px; margin: 12px 0; font-weight: 600; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 1000px) { .row { grid-template-columns: 1fr; } }
-
-    .excel-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; }
-    .excel-table th, .excel-table td {
-      border: 1px solid var(--border); padding: 8px 10px; text-align: left;
+    aside#sidebar {
+      width: 300px; background: var(--sidebar-bg); color: #fff; padding: 20px; overflow-y: auto;
+      box-shadow: 2px 0 8px rgba(0,0,0,.08);
     }
-    .excel-table th { background: #f1f3f5; font-weight: 500; position: sticky; top: 0; z-index: 1; }
-    .excel-table tr:hover { background: var(--hover); cursor: pointer; }
-    .excel-table tr.selected { background: #d1e7ff; }
-    #tableWrap { max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
-
-    .card {
-      border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 12px;
+    #sidebar h3 { font-size: 18px; margin-bottom: 10px; font-weight: 600; }
+    #sidebar .note { font-size: 12px; opacity: .9; margin-bottom: 12px; }
+    #templatesList button {
+      width: 100%; padding: 12px; margin: 6px 0; background: #334466; color:#fff; border:0; border-radius: 8px;
+      text-align: left; cursor: pointer; transition: .2s;
     }
-    .controls { display: grid; grid-template-columns: 1fr 200px 170px; gap: 10px; align-items: center; margin: 8px 0 4px; }
+    #templatesList button:hover { background: #405080; }
+    #templatesList button.active { background: var(--primary); font-weight: 600; }
+
+    main#right { flex: 1; padding: 20px; background: #fff; overflow-y: auto; }
+    h3 { font-size: 18px; margin: 12px 0; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .controls { display: grid; grid-template-columns: 1fr 200px 170px; gap: 10px; align-items: center; margin: 8px 0; }
     @media (max-width: 700px) { .controls { grid-template-columns: 1fr; } }
 
-    input[type="number"], input[type="text"] {
-      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
+    input[type="text"], input[type="number"] {
+      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
     }
-    .btn-primary, .btn-secondary {
-      width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; transition: .2s;
-    }
+    .btn { padding: 12px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
     .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover { background: #1557b0; }
+    .btn-primary:hover { filter: brightness(.95); }
     .btn-secondary { background: #efefef; }
-    .btn-secondary:hover { background: #e2e2e2; }
+    .btn-secondary:hover { filter: brightness(.95); }
 
-    .error { color: var(--error); font-size: 14px; margin: 6px 0; }
-    .muted { font-size: 12px; opacity: .85; }
-    #preview { min-height: 220px; border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: var(--bg-light); overflow: auto; }
+    .excel-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .excel-table th, .excel-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+    .excel-table th { background: #f1f3f5; position: sticky; top: 0; z-index: 1; }
+    .excel-table tr:hover { background: var(--hover); cursor: pointer; }
+    .excel-table tr.selected { background: #d1e7ff; }
+    #tableWrap { max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+
+    #preview { min-height: 220px; border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: var(--bg-light); overflow: auto; }
+    .error { color: var(--error); font-size: 14px; margin-top: 6px; white-space: pre-wrap; }
+    .ok { color: var(--ok); font-size: 14px; }
+    .small { font-size: 12px; opacity: .85; }
+    .listbox { background: #f7f9ff; border: 1px dashed var(--border); padding: 10px; border-radius: 8px; margin: 6px 0; }
+
+    .diag { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 900px) { .diag { grid-template-columns: 1fr; } }
+    .diag h4 { margin: 6px 0; font-size: 15px; }
+    code.k { background: #eee; padding: 2px 6px; border-radius: 6px; display: inline-block; margin: 2px 4px 2px 0; }
   </style>
 </head>
 <body>
@@ -102,50 +92,77 @@
     </aside>
 
     <main id="right">
-      <div class="row">
+      <div class="grid">
+
         <section class="card">
           <h3>Реестр (Google Sheets)</h3>
           <div class="controls">
             <input type="text" id="sheetIdInput" placeholder="ID Google-таблицы">
             <input type="number" id="rowInput" placeholder="№ строки (со 2)" min="2">
-            <button class="btn-secondary" id="reloadSheetBtn">Обновить</button>
+            <button class="btn btn-secondary" id="reloadSheetBtn">Обновить</button>
           </div>
           <div id="tableWrap"></div>
           <div id="errorTable" class="error"></div>
-          <div class="muted">Клик по строке — подставит её номер.</div>
+          <div class="small">Клик по строке — подставит её номер.</div>
         </section>
 
         <section class="card">
-          <h3>Форма письма (превью)</h3>
+          <h3>Форма письма</h3>
           <div id="preview">Выберите шаблон и строку реестра.</div>
           <div id="errorTpl" class="error"></div>
           <div class="controls" style="grid-template-columns: 1fr 1fr;">
-            <button class="btn-primary" id="generateBtn">Сформировать превью</button>
-            <button class="btn-secondary" id="downloadBtn" disabled>Скачать .docx</button>
+            <button class="btn btn-primary" id="generateBtn">Сформировать превью</button>
+            <button class="btn btn-secondary" id="downloadBtn" disabled>Скачать .docx</button>
           </div>
-          <div class="muted">Превью — текст и базовая разметка. Итоговый .docx — 1:1 как шаблон (шрифты, отступы, поля).</div>
+
+          <div class="card" style="margin-top:12px">
+            <h3 style="margin-top:0">Диагностика соответствия</h3>
+            <div id="diagBox" class="diag">
+              <div>
+                <h4>Теги в выбранном шаблоне</h4>
+                <div id="tplTags" class="listbox small">—</div>
+              </div>
+              <div>
+                <h4>Заголовки в таблице</h4>
+                <div id="sheetHeaders" class="listbox small">—</div>
+              </div>
+            </div>
+            <div class="diag">
+              <div>
+                <h4>Отсутствуют в таблице</h4>
+                <div id="missingInSheet" class="listbox small">—</div>
+              </div>
+              <div>
+                <h4>Лишние столбцы (не используются)</h4>
+                <div id="unusedHeaders" class="listbox small">—</div>
+              </div>
+            </div>
+            <div class="small">Совет: заголовок столбца должен совпадать с именем тега без фигурных скобок. Мелкие расхождения (пробелы/подчёркивания/регистр) система пытается исправить автоматически.</div>
+          </div>
         </section>
+
       </div>
     </main>
   </div>
 
   <script>
-    // ====== НАСТРОЙКИ ======
+    // ===== НАСТРОЙКИ =====
     const GITHUB_USER = "anatoliy031";
     const GITHUB_REPO = "letter-automation";
     const GITHUB_TEMPLATES_FOLDER = "templates";
 
-    // НОВЫЙ ID Google-таблицы
+    // Новый ID Google-таблицы
     const DEFAULT_GOOGLE_SHEET_ID = "17vdbh0KHIZ-lAsqFXp6HtQA-NBymV5Wh";
 
-    // ====== СОСТОЯНИЕ ======
-    let templatesMeta = [];
-    let selectedTemplate = null;
-    let excelHeaders = [];
-    let excelRows = [];
-    let lastGeneratedBlob = null;
+    // ===== СОСТОЯНИЕ =====
+    let templatesMeta = [];          // список .docx из GitHub
+    let selectedTemplate = null;     // выбранный шаблон
+    let excelHeaders = [];           // заголовки таблицы
+    let excelRows = [];              // строки таблицы
+    let lastGeneratedBlob = null;    // собранный docx
+    let currentTplTags = [];         // теги, найденные в шаблоне
 
-    // ====== UI ======
+    // ===== UI =====
     const $tplList = document.getElementById('templatesList');
     const $tableWrap = document.getElementById('tableWrap');
     const $rowInput = document.getElementById('rowInput');
@@ -156,20 +173,60 @@
     const $errorTable = document.getElementById('errorTable');
     const $generateBtn = document.getElementById('generateBtn');
     const $downloadBtn = document.getElementById('downloadBtn');
+    const $tplTags = document.getElementById('tplTags');
+    const $sheetHeaders = document.getElementById('sheetHeaders');
+    const $missingInSheet = document.getElementById('missingInSheet');
+    const $unusedHeaders = document.getElementById('unusedHeaders');
 
-    // ====== HELPERS ======
+    // ===== HELPERS =====
     function setError(el, msg) { el.textContent = msg || ""; }
     function clearPreview() { $preview.innerHTML = "Выберите шаблон и строку реестра."; }
     function csvUrlFromSheetId(id) {
       return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
     }
-    function makeDataObject(headers, row) {
+    function uniq(arr) { return [...new Set(arr)]; }
+    function renderKeysBox(el, list) {
+      if (!list || !list.length) { el.innerHTML = "—"; return; }
+      el.innerHTML = list.map(k => `<code class="k">${k}</code>`).join(" ");
+    }
+
+    // «Умная» нормализация ключей (и генерация алиасов)
+    function normalizeKey(s) {
+      if (!s) return "";
+      // унифицируем регистр, символ № -> N, пробелы/дефисы -> _
+      return s
+        .normalize("NFC")
+        .replace(/\u00A0/g, ' ')
+        .replace(/№/g, 'N')
+        .replace(/[.,;:()]/g, '')
+        .replace(/\s+/g, '_')
+        .replace(/-+/g, '_')
+        .replace(/__+/g, '_')
+        .trim();
+    }
+    function makeAliases(header) {
+      // для колонки "Номер договора" создадим:
+      // "Номер договора", "Номер_договора", нижний регистр вариантов и нормализованный
+      const h = header ?? "";
+      const withUnderscore = h.replace(/\s+/g, '_');
+      const withSpaces = h.replace(/_/g, ' ');
+      const norm = normalizeKey(h);
+      return uniq([h, withUnderscore, withSpaces, h.toLowerCase(), withUnderscore.toLowerCase(), withSpaces.toLowerCase(), norm, norm.toLowerCase()]);
+    }
+
+    function buildDataObject(headers, row) {
       const obj = {};
-      headers.forEach((h, i) => { obj[h] = row[i] ?? ""; });
+      headers.forEach((h, i) => {
+        const val = row[i] ?? "";
+        // Запишем сразу под множеством ключей-алиасов
+        makeAliases(h).forEach(alias => {
+          obj[alias] = val;
+        });
+      });
       return obj;
     }
 
-    // ====== ШАБЛОНЫ (.docx) ИЗ GITHUB ======
+    // ===== ЗАГРУЗКА ШАБЛОНОВ (.docx) ИЗ GITHUB =====
     async function fetchTemplatesList() {
       try {
         const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
@@ -182,29 +239,62 @@
         $tplList.innerHTML = "Ошибка загрузки шаблонов";
       }
     }
-
     function renderTemplatesList() {
-      if (!templatesMeta.length) {
-        $tplList.innerHTML = "Нет .docx-шаблонов в /templates";
-        return;
-      }
+      if (!templatesMeta.length) { $tplList.innerHTML = "Нет .docx-шаблонов в /templates"; return; }
       $tplList.innerHTML = templatesMeta.map((t, idx) =>
         `<button id="tplbtn-${idx}" onclick="selectTemplate(${idx})" title="${t.name.replace(/\.docx$/i,'')}">${t.name.replace(/\.docx$/i,'')}</button>`
       ).join("");
     }
 
-    window.selectTemplate = function(idx) {
+    window.selectTemplate = async function(idx) {
       document.querySelectorAll('#templatesList button').forEach(b => b.classList.remove('active'));
-      const btn = document.getElementById(`tplbtn-${idx}`);
-      if (btn) btn.classList.add('active');
+      const btn = document.getElementById(`tplbtn-${idx}`); if (btn) btn.classList.add('active');
       selectedTemplate = templatesMeta[idx];
       setError($errorTpl, "");
       clearPreview();
       $downloadBtn.disabled = true;
       lastGeneratedBlob = null;
+
+      // извлечём теги из .docx для диагностики
+      currentTplTags = await extractDocxTags(selectedTemplate.download_url);
+      renderKeysBox($tplTags, currentTplTags);
+      // и сразу обновим diff с таблицей
+      updateDiagnostics();
+    };
+
+    // Извлечение всех {{тегов}} из docx (документ, заголовки, колонтитулы)
+    async function extractDocxTags(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Не удалось загрузить шаблон");
+        const ab = await res.arrayBuffer();
+        const zip = new PizZip(ab);
+
+        const xmlFiles = Object.keys(zip.files).filter(n => n.startsWith('word/') && n.endsWith('.xml'));
+        const tagSet = new Set();
+        const rgx = /{{\s*([^}]+?)\s*}}/g;
+
+        xmlFiles.forEach(name => {
+          try {
+            const txt = zip.files[name].asText();
+            let m;
+            while ((m = rgx.exec(txt)) !== null) {
+              const raw = m[1].trim();
+              // для синтаксиса с выражениями берём до пробела/пайпа, чтобы вытащить ключ
+              const base = raw.split('|')[0].trim();
+              tagSet.add(base);
+            }
+          } catch (_) {}
+        });
+
+        return Array.from(tagSet).sort((a,b)=>a.localeCompare(b));
+      } catch (e) {
+        console.warn("extractDocxTags error:", e);
+        return [];
+      }
     }
 
-    // ====== GOOGLE SHEETS (CSV) ======
+    // ===== GOOGLE SHEETS (CSV) =====
     async function loadGoogleSheet(sheetId) {
       try {
         setError($errorTable, "");
@@ -215,12 +305,16 @@
         const ws = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
         if (!json.length) throw new Error("Пустая таблица");
-        excelHeaders = json[0];
+        excelHeaders = json[0].map(h => (h ?? "").toString().trim());
         excelRows = json.slice(1);
         renderTable();
+        renderKeysBox($sheetHeaders, excelHeaders);
+        updateDiagnostics();
       } catch (e) {
         $tableWrap.innerHTML = "";
+        renderKeysBox($sheetHeaders, []);
         setError($errorTable, e.message || "Ошибка загрузки таблицы");
+        updateDiagnostics();
       }
     }
 
@@ -243,7 +337,37 @@
       renderTable();
     }
 
-    // ====== ГЕНЕРАЦИЯ DOCX + PREVIEW ======
+    // ===== ДИАГНОСТИКА СООТВЕТСТВИЯ ТЕГОВ И ЗАГОЛОВКОВ =====
+    function updateDiagnostics() {
+      // найдём соответствия по алиасам/нормализации
+      const hdrAliases = new Map(); // ключ: alias -> оригинальный header
+      excelHeaders.forEach(h => {
+        makeAliases(h).forEach(a => hdrAliases.set(a, h));
+      });
+
+      const missing = [];
+      const usedHeaders = new Set();
+
+      currentTplTags.forEach(tag => {
+        const candidates = uniq([tag, tag.toLowerCase(), normalizeKey(tag), normalizeKey(tag).toLowerCase(), tag.replace(/\s+/g,'_'), tag.replace(/_/g,' ')]);
+        let matchedHeader = null;
+        for (const c of candidates) {
+          if (hdrAliases.has(c)) { matchedHeader = hdrAliases.get(c); break; }
+        }
+        if (!matchedHeader) {
+          missing.push(tag);
+        } else {
+          usedHeaders.add(matchedHeader);
+        }
+      });
+
+      const unused = excelHeaders.filter(h => !usedHeaders.has(h));
+
+      renderKeysBox($missingInSheet, missing);
+      renderKeysBox($unusedHeaders, unused);
+    }
+
+    // ===== ГЕНЕРАЦИЯ DOCX + PREVIEW =====
     async function fetchArrayBuffer(url) {
       const res = await fetch(url);
       if (!res.ok) throw new Error("Не удалось загрузить шаблон");
@@ -255,10 +379,7 @@
       $downloadBtn.disabled = true;
       lastGeneratedBlob = null;
 
-      if (!selectedTemplate) {
-        setError($errorTpl, "Выберите шаблон (.docx) слева");
-        return;
-      }
+      if (!selectedTemplate) { setError($errorTpl, "Выберите шаблон (.docx) слева"); return; }
       const rowNum = parseInt($rowInput.value);
       if (isNaN(rowNum) || rowNum < 2 || rowNum - 2 >= excelRows.length) {
         setError($errorTpl, "Введите корректный номер строки реестра");
@@ -268,22 +389,38 @@
       try {
         const ab = await fetchArrayBuffer(selectedTemplate.download_url);
         const zip = new PizZip(ab);
-
         const doc = new window.docxtemplater().loadZip(zip);
-        const data = makeDataObject(excelHeaders, excelRows[rowNum - 2]);
+
+        const data = buildDataObject(excelHeaders, excelRows[rowNum - 2]);
         doc.setData(data);
-        doc.render();
+
+        try {
+          doc.render();
+        } catch (e) {
+          // Расширенный вывод ошибок DocxTemplater
+          let details = "";
+          if (e.properties && e.properties.errors) {
+            details = e.properties.errors.map(err => {
+              return `• ${err.properties?.explanation || err.properties?.id || err.message || "Ошибка"}`;
+            }).join("\n");
+          }
+          throw new Error("Ошибка формирования шаблона.\n" + details + "\nПроверьте совпадение тегов и заголовков (см. «Диагностика соответствия» ниже).");
+        }
 
         const out = doc.getZip().generate({ type: "blob" });
         lastGeneratedBlob = out;
 
-        const arrayBuffer = await out.arrayBuffer();
-        const result = await window.mammoth.convertToHtml({ arrayBuffer });
-        $preview.innerHTML = result.value;
+        // Превью
+        const buf = await out.arrayBuffer();
+        const result = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+        $preview.innerHTML = result.value || "<i>(Превью пустое — но .docx сформирован)</i>";
         $downloadBtn.disabled = false;
+
+        // На всякий случай обновим диагностику (если автосопоставление сработало)
+        updateDiagnostics();
       } catch (e) {
         console.error(e);
-        setError($errorTpl, "Ошибка формирования. Проверьте совпадение тегов {{...}} и заголовков столбцов.");
+        setError($errorTpl, e.message || "Ошибка формирования. Проверьте соответствие тегов и заголовков.");
       }
     }
 
@@ -301,13 +438,13 @@
       URL.revokeObjectURL(url);
     }
 
-    // ====== СВЯЗКА UI ======
+    // ===== СВЯЗКА UI =====
     $sheetIdInput.value = DEFAULT_GOOGLE_SHEET_ID;
     $reloadSheetBtn.addEventListener('click', () => loadGoogleSheet($sheetIdInput.value.trim()));
     $generateBtn.addEventListener('click', generateDocxAndPreview);
     $downloadBtn.addEventListener('click', downloadDocx);
 
-    // Автообновление каждые 5 минут
+    // Автообновление таблицы каждые 5 минут
     setInterval(() => {
       const id = $sheetIdInput.value.trim();
       if (id) loadGoogleSheet(id);
