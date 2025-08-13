@@ -27,7 +27,6 @@
     html,body{height:100%}
     body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg-light)}
 
-    /* Top App Bar */
     .appbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);
       display:flex;align-items:center;gap:12px;padding:10px 12px}
     .app-title{font-weight:600}
@@ -38,7 +37,6 @@
     .ham::before,.ham::after{content:"";position:absolute;left:0;right:0;height:2px;background:#222}
     .ham::before{top:-7px}.ham::after{top:7px}
 
-    /* Layout */
     .layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 54px)}
     aside#sidebar{background:var(--sidebar-bg);color:#fff;padding:16px;border-right:1px solid rgba(255,255,255,.08);overflow:auto}
     .sb-title{font-size:16px;font-weight:600;margin-bottom:10px}
@@ -53,7 +51,8 @@
     .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:var(--shadow);margin-bottom:12px}
     h3{margin:6px 0 10px;font-size:16px}
 
-    .filters{display:grid;grid-template-columns:1fr 200px;gap:8px;align-items:center}
+    /* обновлено: добавили поле Номер строки */
+    .filters{display:grid;grid-template-columns:1fr 260px 140px;gap:8px;align-items:center}
     .filters input, .filters select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
     .muted{font-size:12px;opacity:.8}
     .link{color:var(--primary);cursor:pointer}
@@ -67,7 +66,6 @@
     .btn:disabled{opacity:.6;cursor:not-allowed}
     .error{color:var(--error);font-size:13px;margin-top:6px;white-space:pre-wrap}
 
-    /* Hidden drawers */
     .drawer{display:none;margin-top:8px}
     .drawer.open{display:block}
     .table-wrap{border:1px solid var(--border);border-radius:10px;overflow:auto;max-height:55vh;background:#fff}
@@ -75,7 +73,6 @@
     th,td{border-bottom:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
     thead th{position:sticky;top:0;background:#f4f6fb;z-index:1}
 
-    /* Mobile drawer */
     .scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.2s;z-index:55}
     .scrim.show{opacity:1;pointer-events:auto}
     .drawer-side{position:fixed;inset:0 30% 0 0;max-width:80vw;background:var(--sidebar-bg);color:#fff;padding:14px;transform:translateX(-100%);transition:transform .2s ease;z-index:60;overflow:auto;border-right:1px solid rgba(255,255,255,.08)}
@@ -85,16 +82,14 @@
     @media (max-width:767px){
       .layout{display:block}
       aside#sidebar{display:none}
-      .filters{grid-template-columns:1fr}
+      .filters{grid-template-columns:1fr 1fr}
+      .filters input#rowNumberInput{grid-column:1 / -1}
     }
   </style>
 </head>
 <body>
-  <!-- App bar -->
   <div class="appbar">
-    <button id="menuBtn" class="icon-btn" aria-label="Открыть меню">
-      <span class="ham"></span>
-    </button>
+    <button id="menuBtn" class="icon-btn" aria-label="Открыть меню"><span class="ham"></span></button>
     <div class="app-title">Автоматизация писем</div>
     <div class="spacer"></div>
   </div>
@@ -104,9 +99,7 @@
   <aside id="drawerSide" class="drawer-side" aria-hidden="true">
     <div class="sb-title">Шаблоны (.docx)</div>
     <div class="sb-note">Теги <code>[[Поле]]</code>. Шрифты/отступы — как в Word.</div>
-    <div class="sb-search">
-      <input id="tplSearchMobile" placeholder="Поиск шаблона…">
-    </div>
+    <div class="sb-search"><input id="tplSearchMobile" placeholder="Поиск шаблона…"></div>
     <div id="tplListMobile" class="tpl-list">Загрузка…</div>
   </aside>
 
@@ -120,12 +113,14 @@
     </aside>
 
     <main>
-      <!-- Умные фильтры + выбор записи -->
+      <!-- Фильтры + выбор записи + Номер строки -->
       <section class="card">
         <h3>Данные для письма</h3>
         <div class="filters">
           <input id="smartQuery" placeholder="Фильтр по всем полям (пример: Филиал=Тихорецкие ОС=Ростелеком «Номер_ТУ=123»). Просто текст — общий поиск">
           <select id="recordSelect"><option value="">— выберите запись —</option></select>
+          <!-- НОВОЕ: выбор номера строки -->
+          <input id="rowNumberInput" type="number" min="2" placeholder="№ строки (со 2)">
         </div>
         <div class="muted" style="margin-top:6px">
           <span id="matchInfo">Совпадений: 0</span> •
@@ -137,7 +132,7 @@
       <!-- Превью письма + действия -->
       <section class="card">
         <h3>Письмо</h3>
-        <div id="preview">Выберите шаблон и задайте фильтр, чтобы выбрать строку.</div>
+        <div id="preview">Выберите шаблон и задайте фильтр/строку.</div>
         <div id="errorTpl" class="error"></div>
         <div class="actions">
           <button class="btn btn-primary" id="downloadBtn" disabled>Скачать .docx</button>
@@ -198,6 +193,7 @@
 
     const $smartQuery = document.getElementById('smartQuery');
     const $recordSelect = document.getElementById('recordSelect');
+    const $rowNumberInput = document.getElementById('rowNumberInput');
     const $matchInfo = document.getElementById('matchInfo');
 
     const $preview = document.getElementById('preview');
@@ -219,7 +215,7 @@
     // ===== HELPERS =====
     const isMobile = () => window.matchMedia("(max-width: 767px)").matches;
     function setError(el, msg){ el.textContent = msg || ""; }
-    function clearPreview(){ $preview.innerHTML = "Выберите шаблон и задайте фильтр/запись."; $downloadBtn.disabled = true; $copyBtn.disabled = true; }
+    function clearPreview(){ $preview.innerHTML = "Выберите шаблон и задайте фильтр/строку."; $downloadBtn.disabled = true; $copyBtn.disabled = true; }
     function csvUrlFromSheetId(id){ return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`; }
     const uniq = arr => [...new Set(arr)];
     const renderChips = list => (!list||!list.length) ? "—" : list.map(k=>`<code style="background:#eee;border-radius:6px;padding:2px 6px;margin:2px 4px 0 0;display:inline-block">${k}</code>`).join(" ");
@@ -255,7 +251,8 @@
         const res = await fetch(apiUrl);
         if(!res.ok) throw new Error("GitHub API error");
         const files = await res.json();
-        templatesMeta = files.filter(f=>/\.docx$/i.test(f.name)).map(f=>({name:f.name, url:f.download_url}));
+        const docs = files.filter(f=>/\.docx$/i.test(f.name)).map(f=>({name:f.name, url:f.download_url}));
+        templatesMeta = docs;
         renderTemplates();
       }catch(e){
         $sidebarList.innerHTML = "Ошибка загрузки шаблонов";
@@ -281,8 +278,8 @@
       await updateTplTags();
       triggerAutoGenerate();
     }
-    $tplSearch.addEventListener('input', renderTemplates);
-    $tplSearchMobile.addEventListener('input', renderTemplates);
+    document.getElementById('tplSearch').addEventListener('input', renderTemplates);
+    document.getElementById('tplSearchMobile').addEventListener('input', renderTemplates);
 
     // Извлечь [[теги]] из docx
     async function extractDocxTags(url){
@@ -348,19 +345,14 @@
       $tableWrap.innerHTML = html;
     }
     window.selectRowIndex = function(i){
-      // Выбор из таблицы в скрытом режиме — обновим селект и сгенерим письмо
-      populateRecordSelect([i]);
+      // из скрытого реестра
       $recordSelect.value = String(i);
+      $rowNumberInput.value = i + 2;
       triggerAutoGenerate();
-      // прокрутка к превью
       document.querySelector('#preview').scrollIntoView({behavior:'smooth', block:'start'});
     }
 
     // ===== ИНТЕЛЛЕКТУАЛЬНЫЕ ФИЛЬТРЫ =====
-    // Поддержка:
-    //   - общий поиск по всем полям: любое слово/фраза
-    //   - точечные фильтры: Ключ=Значение (ключ = имя столбца; значение можно в "кавычках")
-    //   - несколько фильтров через пробел: Филиал="Тихорецкие электрические сети" ОС=Ростелеком 123
     function parseSmartQuery(q){
       const tokens = [];
       let cur = '', inQuotes = false;
@@ -370,9 +362,7 @@
         if(!inQuotes && /\s/.test(ch)){
           if(cur.trim()) tokens.push(cur.trim());
           cur = '';
-        } else {
-          cur += ch;
-        }
+        } else cur += ch;
       }
       if(cur.trim()) tokens.push(cur.trim());
       return tokens;
@@ -381,31 +371,20 @@
       if(!excelRows.length) return [];
       const tokens = parseSmartQuery(q);
       const headerIdx = new Map(excelHeaders.map((h,i)=>[h,i]));
-      // Разделим на пары key=value и свободные строки
-      const pairs = [];
-      const free = [];
+      const pairs = [], free = [];
       tokens.forEach(t=>{
         const eq = t.indexOf('=');
-        if(eq>0){
-          const key = t.slice(0,eq).trim();
-          const val = t.slice(eq+1).trim();
-          pairs.push({key, val});
-        } else {
-          free.push(t);
-        }
+        if(eq>0){ pairs.push({key:t.slice(0,eq).trim(), val:t.slice(eq+1).trim()}); }
+        else free.push(t);
       });
-      // Функция сопоставления ячейки
       const matchVal = (cell,needle) => String(cell??'').toLowerCase().includes(String(needle).toLowerCase());
       const rowsIdx = [];
       for(let i=0;i<excelRows.length;i++){
         const row = excelRows[i];
         let ok = true;
-        // key=value — все должны совпасть
         for(const {key,val} of pairs){
-          // ищем индекс колонки (гибко: с алиасами)
           let colIndex = headerIdx.get(key);
           if(colIndex === undefined){
-            // пробуем найти по алиасам
             const target = key.toLowerCase();
             for(let c=0;c<excelHeaders.length;c++){
               const aliases = makeAliases(excelHeaders[c]).map(a=>a.toLowerCase());
@@ -415,7 +394,6 @@
           if(colIndex === undefined || !matchVal(row[colIndex], val)){ ok = false; break; }
         }
         if(!ok) continue;
-        // свободные слова — встречаются в ЛЮБОЙ колонке
         for(const word of free){
           const hit = row.some(cell => matchVal(cell, word));
           if(!hit){ ok = false; break; }
@@ -425,7 +403,6 @@
       return rowsIdx;
     }
     function populateRecordSelect(indexes){
-      // Заполняем выпадающий список краткой карточкой записи
       const makeLabel = (i)=>{
         const row = excelRows[i]||[];
         const pick = (name)=> row[(excelHeaders.indexOf(name))] || "";
@@ -439,26 +416,49 @@
         if(os) parts.push(os);
         if(tu) parts.push(`ТУ:${tu}`);
         const label = parts.join(" • ") || `Строка ${i+2}`;
-        return `${label}`;
+        return `${label} — №${i+2}`;
       };
       $recordSelect.innerHTML = `<option value="">— выберите запись —</option>` + indexes.slice(0,500).map(i=>`<option value="${i}">${makeLabel(i)}</option>`).join("");
     }
     function refreshSmartFilter(){
       const q = $smartQuery.value || "";
       const idxs = applySmartFilter(q);
-      $matchInfo.textContent = `Совпадений: ${idxs.length}`;
+      $matchInfo.textContent = `Совпадений: ${idxs.length} / всего: ${excelRows.length}`;
       populateRecordSelect(idxs);
       // Автовыбор одной найденной строки
       if(idxs.length === 1){
         $recordSelect.value = String(idxs[0]);
-      } else {
+        $rowNumberInput.value = idxs[0] + 2;
+      } else if(!$rowNumberInput.value){
         $recordSelect.value = "";
       }
-      triggerAutoGenerate(); // письмо формируем автоматически
+      triggerAutoGenerate();
     }
-    $smartQuery.addEventListener('input', ()=>{ refreshSmartFilter(); });
+    $smartQuery.addEventListener('input', refreshSmartFilter);
 
-    $recordSelect.addEventListener('change', ()=>{ triggerAutoGenerate(); });
+    // Синхронизация выбора записи <-> номер строки
+    $recordSelect.addEventListener('change', ()=>{
+      const v = $recordSelect.value;
+      if(v!=="" && !isNaN(+v)){ $rowNumberInput.value = (+v) + 2; }
+      triggerAutoGenerate();
+    });
+
+    // НОВОЕ: ручной ввод номера строки
+    function selectByRowNumber(){
+      const n = parseInt($rowNumberInput.value, 10);
+      if(isNaN(n) || n < 2 || n > excelRows.length + 1){
+        setError($errorTpl, "Неверный номер строки: допустимо от 2 до " + (excelRows.length + 1));
+        return;
+      }
+      const idx = n - 2;
+      // если индекс есть в текущем списке результатов — выберем его в селекте
+      const opt = [...$recordSelect.options].find(o => o.value === String(idx));
+      if(opt) $recordSelect.value = String(idx);
+      else $recordSelect.value = ""; // вне фильтра — всё равно сгенерим по номеру
+      triggerAutoGenerate();
+    }
+    $rowNumberInput.addEventListener('change', selectByRowNumber);
+    $rowNumberInput.addEventListener('keyup', (e)=>{ if(e.key==='Enter') selectByRowNumber(); });
 
     // ===== ДИАГНОСТИКА =====
     function updateDiagnostics(){
@@ -477,11 +477,18 @@
       $unusedHeaders.innerHTML = renderChips(unused);
     }
 
-    // ===== ГЕНЕРАЦИЯ DOCX + PREVIEW (автоматически) =====
+    // ===== ГЕНЕРАЦИЯ DOCX + PREVIEW (авто) =====
     async function autoGenerate(){
       setError($errorTpl,""); lastGeneratedBlob = null;
-      const rec = $recordSelect.value;
-      if(!selectedTemplate || !rec){ clearPreview(); return; }
+      // приоритет: если задан номер строки — берём его, иначе — выбранный из списка
+      let recIdx = null;
+      if($rowNumberInput.value){
+        const n = parseInt($rowNumberInput.value,10);
+        if(!isNaN(n) && n>=2 && n<=excelRows.length+1) recIdx = n - 2;
+      }
+      if(recIdx===null && $recordSelect.value) recIdx = parseInt($recordSelect.value,10);
+
+      if(!selectedTemplate || recIdx===null || isNaN(recIdx)){ clearPreview(); return; }
 
       try{
         const res = await fetch(selectedTemplate.url);
@@ -490,7 +497,7 @@
         const zip = new PizZip(ab);
 
         const doc = new window.docxtemplater(zip, { delimiters:{start:'[[', end:']]'} });
-        const data = buildDataObject(excelHeaders, excelRows[parseInt(rec)]);
+        const data = buildDataObject(excelHeaders, excelRows[recIdx]);
         doc.setData(data);
         try{ doc.render(); }
         catch(e){
@@ -508,7 +515,6 @@
         $downloadBtn.disabled = false;
         $copyBtn.disabled = false;
 
-        // На мобильном — к превью
         if(isMobile()){ document.querySelector('#preview').scrollIntoView({behavior:'smooth', block:'start'}); }
       }catch(e){
         console.error(e); setError($errorTpl, e.message || "Ошибка формирования");
@@ -516,7 +522,6 @@
       }
     }
     function triggerAutoGenerate(){
-      // Делаем минимальную задержку, чтобы не «дёргать» при быстром вводе
       clearTimeout(triggerAutoGenerate._t);
       triggerAutoGenerate._t = setTimeout(autoGenerate, 150);
     }
@@ -528,25 +533,23 @@
       const url = URL.createObjectURL(lastGeneratedBlob);
       a.href = url;
       const clean = selectedTemplate.name.replace(/\.docx$/i,'');
-      const rec = $recordSelect.value ? (parseInt($recordSelect.value)+2) : 'X';
+      const rec = $rowNumberInput.value ? parseInt($rowNumberInput.value,10) : ($recordSelect.value ? (parseInt($recordSelect.value,10)+2) : 'X');
       a.download = `${clean}_строка_${rec}.docx`;
       document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(url);
     }
     document.getElementById('downloadBtn').addEventListener('click', downloadDocx);
 
-    // Копировать письмо в буфер
+    // Скопировать письмо
     async function copyLetter(){
       const html = $preview.innerHTML;
       if(!html) return;
       try{
-        // Пытаемся скопировать как HTML + Text
         const blobHtml = new Blob([html], { type: "text/html" });
         const blobText = new Blob([ $preview.innerText || $preview.textContent || "" ], { type: "text/plain" });
         const data = [ new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText }) ];
         await navigator.clipboard.write(data);
       }catch(_){
-        // Фолбэк
         const range = document.createRange();
         range.selectNodeContents($preview);
         const sel = window.getSelection();
@@ -554,25 +557,22 @@
         document.execCommand('copy');
         sel.removeAllRanges();
       }
-      // краткий визуальный отклик
       const btn = document.getElementById('copyBtn');
       const old = btn.textContent; btn.textContent = "Скопировано!";
       setTimeout(()=> btn.textContent = old, 1200);
     }
     document.getElementById('copyBtn').addEventListener('click', copyLetter);
 
-    // Тумблеры «Показать…»
+    // Тумблеры спрятанных секций
     function toggle(el){ el.classList.toggle('open'); }
     $toggleRegistry.addEventListener('click', ()=> toggle($registryDrawer));
     $toggleDiag.addEventListener('click', ()=> toggle($diagDrawer));
 
     // Инициализация
     (function init(){
-      // первичная загрузка
       fetchTemplatesList();
       loadGoogleSheet(DEFAULT_GOOGLE_SHEET_ID);
-      // автоподстановка фокуса в фильтр
-      setTimeout(()=> $smartQuery.focus(), 300);
+      setTimeout(()=> document.getElementById('smartQuery').focus(), 300);
     })();
   </script>
 </body>
