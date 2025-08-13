@@ -2,20 +2,20 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Автоматизация писем (.docx + Google Sheets) — с диагностикой тегов</title>
+  <title>Автоматизация писем (.docx + Google Sheets) — теги [[...]]</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- UI шрифт (на .docx не влияет) -->
+  <!-- UI-шрифт (на итоговый .docx не влияет) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- CSV/Excel -->
+  <!-- CSV / Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
   <!-- DocxTemplater + PizZip -->
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.38.0/build/docxtemplater.js"></script>
 
-  <!-- Превью .docx как HTML -->
+  <!-- Mammoth: превью .docx как HTML -->
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 
   <style>
@@ -76,7 +76,6 @@
     .ok { color: var(--ok); font-size: 14px; }
     .small { font-size: 12px; opacity: .85; }
     .listbox { background: #f7f9ff; border: 1px dashed var(--border); padding: 10px; border-radius: 8px; margin: 6px 0; }
-
     .diag { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 900px) { .diag { grid-template-columns: 1fr; } }
     .diag h4 { margin: 6px 0; font-size: 15px; }
@@ -87,7 +86,7 @@
   <div id="container">
     <aside id="sidebar">
       <h3>Шаблоны (.docx)</h3>
-      <div class="note">Теги вида <code>{{Поле}}</code>. Шрифты/отступы — как в Word.</div>
+      <div class="note">Теги вида <code>[[Поле]]</code>. Шрифты/отступы — как в Word.</div>
       <div id="templatesList">Загрузка…</div>
     </aside>
 
@@ -137,7 +136,7 @@
                 <div id="unusedHeaders" class="listbox small">—</div>
               </div>
             </div>
-            <div class="small">Совет: заголовок столбца должен совпадать с именем тега без фигурных скобок. Мелкие расхождения (пробелы/подчёркивания/регистр) система пытается исправить автоматически.</div>
+            <div class="small">Заголовок столбца должен совпадать с именем тега без скобок. Мелкие расхождения (пробелы/подчёркивания/регистр) система пытается исправить автоматически.</div>
           </div>
         </section>
 
@@ -151,7 +150,7 @@
     const GITHUB_REPO = "letter-automation";
     const GITHUB_TEMPLATES_FOLDER = "templates";
 
-    // Новый ID Google-таблицы
+    // Текущий ID Google-таблицы
     const DEFAULT_GOOGLE_SHEET_ID = "17vdbh0KHIZ-lAsqFXp6HtQA-NBymV5Wh";
 
     // ===== СОСТОЯНИЕ =====
@@ -193,7 +192,6 @@
     // «Умная» нормализация ключей (и генерация алиасов)
     function normalizeKey(s) {
       if (!s) return "";
-      // унифицируем регистр, символ № -> N, пробелы/дефисы -> _
       return s
         .normalize("NFC")
         .replace(/\u00A0/g, ' ')
@@ -205,23 +203,17 @@
         .trim();
     }
     function makeAliases(header) {
-      // для колонки "Номер договора" создадим:
-      // "Номер договора", "Номер_договора", нижний регистр вариантов и нормализованный
       const h = header ?? "";
       const withUnderscore = h.replace(/\s+/g, '_');
       const withSpaces = h.replace(/_/g, ' ');
       const norm = normalizeKey(h);
       return uniq([h, withUnderscore, withSpaces, h.toLowerCase(), withUnderscore.toLowerCase(), withSpaces.toLowerCase(), norm, norm.toLowerCase()]);
     }
-
     function buildDataObject(headers, row) {
       const obj = {};
       headers.forEach((h, i) => {
         const val = row[i] ?? "";
-        // Запишем сразу под множеством ключей-алиасов
-        makeAliases(h).forEach(alias => {
-          obj[alias] = val;
-        });
+        makeAliases(h).forEach(alias => { obj[alias] = val; });
       });
       return obj;
     }
@@ -255,14 +247,13 @@
       $downloadBtn.disabled = true;
       lastGeneratedBlob = null;
 
-      // извлечём теги из .docx для диагностики
+      // извлечём теги из .docx для диагностики (формат [[...]])
       currentTplTags = await extractDocxTags(selectedTemplate.download_url);
       renderKeysBox($tplTags, currentTplTags);
-      // и сразу обновим diff с таблицей
       updateDiagnostics();
     };
 
-    // Извлечение всех {{тегов}} из docx (документ, заголовки, колонтитулы)
+    // Извлекаем все [[теги]] из docx (документ + хедеры/футеры)
     async function extractDocxTags(url) {
       try {
         const res = await fetch(url);
@@ -270,18 +261,17 @@
         const ab = await res.arrayBuffer();
         const zip = new PizZip(ab);
 
-        const xmlFiles = Object.keys(zip.files).filter(n => n.startsWith('word/') && n.endsWith('.xml'));
+        const xmlNames = Object.keys(zip.files).filter(n => n.startsWith('word/') && n.endsWith('.xml'));
         const tagSet = new Set();
-        const rgx = /{{\s*([^}]+?)\s*}}/g;
+        const rgx = /\[\[\s*([^\]]+?)\s*\]\]/g;
 
-        xmlFiles.forEach(name => {
+        xmlNames.forEach(name => {
           try {
             const txt = zip.files[name].asText();
             let m;
             while ((m = rgx.exec(txt)) !== null) {
               const raw = m[1].trim();
-              // для синтаксиса с выражениями берём до пробела/пайпа, чтобы вытащить ключ
-              const base = raw.split('|')[0].trim();
+              const base = raw.split('|')[0].trim(); // если будут модификаторы
               tagSet.add(base);
             }
           } catch (_) {}
@@ -337,28 +327,27 @@
       renderTable();
     }
 
-    // ===== ДИАГНОСТИКА СООТВЕТСТВИЯ ТЕГОВ И ЗАГОЛОВКОВ =====
+    // ===== ДИАГНОСТИКА (сопоставление тегов и заголовков) =====
     function updateDiagnostics() {
-      // найдём соответствия по алиасам/нормализации
-      const hdrAliases = new Map(); // ключ: alias -> оригинальный header
-      excelHeaders.forEach(h => {
-        makeAliases(h).forEach(a => hdrAliases.set(a, h));
-      });
+      const hdrAliases = new Map(); // alias -> оригинальный header
+      excelHeaders.forEach(h => { makeAliases(h).forEach(a => hdrAliases.set(a, h)); });
 
       const missing = [];
       const usedHeaders = new Set();
 
       currentTplTags.forEach(tag => {
-        const candidates = uniq([tag, tag.toLowerCase(), normalizeKey(tag), normalizeKey(tag).toLowerCase(), tag.replace(/\s+/g,'_'), tag.replace(/_/g,' ')]);
+        const candidates = uniq([
+          tag, tag.toLowerCase(),
+          normalizeKey(tag), normalizeKey(tag).toLowerCase(),
+          tag.replace(/\s+/g,'_'),
+          tag.replace(/_/g,' ')
+        ]);
         let matchedHeader = null;
         for (const c of candidates) {
           if (hdrAliases.has(c)) { matchedHeader = hdrAliases.get(c); break; }
         }
-        if (!matchedHeader) {
-          missing.push(tag);
-        } else {
-          usedHeaders.add(matchedHeader);
-        }
+        if (!matchedHeader) missing.push(tag);
+        else usedHeaders.add(matchedHeader);
       });
 
       const unused = excelHeaders.filter(h => !usedHeaders.has(h));
@@ -367,7 +356,7 @@
       renderKeysBox($unusedHeaders, unused);
     }
 
-    // ===== ГЕНЕРАЦИЯ DOCX + PREVIEW =====
+    // ===== ГЕНЕРАЦИЯ DOCX + PREVIEW (для [[...]]) =====
     async function fetchArrayBuffer(url) {
       const res = await fetch(url);
       if (!res.ok) throw new Error("Не удалось загрузить шаблон");
@@ -389,7 +378,11 @@
       try {
         const ab = await fetchArrayBuffer(selectedTemplate.download_url);
         const zip = new PizZip(ab);
-        const doc = new window.docxtemplater().loadZip(zip);
+
+        // ВАЖНО: указываем новые разделители [[...]]
+        const doc = new window.docxtemplater(zip, {
+          delimiters: { start: '[[', end: ']]' }
+        });
 
         const data = buildDataObject(excelHeaders, excelRows[rowNum - 2]);
         doc.setData(data);
@@ -397,14 +390,11 @@
         try {
           doc.render();
         } catch (e) {
-          // Расширенный вывод ошибок DocxTemplater
           let details = "";
           if (e.properties && e.properties.errors) {
-            details = e.properties.errors.map(err => {
-              return `• ${err.properties?.explanation || err.properties?.id || err.message || "Ошибка"}`;
-            }).join("\n");
+            details = e.properties.errors.map(err => `• ${err.properties?.explanation || err.properties?.id || err.message || "Ошибка"}`).join("\n");
           }
-          throw new Error("Ошибка формирования шаблона.\n" + details + "\nПроверьте совпадение тегов и заголовков (см. «Диагностика соответствия» ниже).");
+          throw new Error("Ошибка формирования шаблона.\n" + details + "\nПроверьте совпадение тегов и заголовков (см. «Диагностика соответствия»).");
         }
 
         const out = doc.getZip().generate({ type: "blob" });
@@ -416,7 +406,6 @@
         $preview.innerHTML = result.value || "<i>(Превью пустое — но .docx сформирован)</i>";
         $downloadBtn.disabled = false;
 
-        // На всякий случай обновим диагностику (если автосопоставление сработало)
         updateDiagnostics();
       } catch (e) {
         console.error(e);
