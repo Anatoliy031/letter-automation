@@ -2,578 +2,2209 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Автоматизация писем — упрощённый интерфейс ([[...]] теги)</title>
+  <title>Автоматизация писем — улучшенный интерфейс</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- UI-шрифт -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Современные шрифты -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- CSV / Excel -->
+  <!-- Иконки -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Библиотеки -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
-  <!-- DocxTemplater + PizZip -->
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.38.0/build/docxtemplater.js"></script>
-
-  <!-- Mammoth: превью .docx как HTML -->
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 
   <style>
-    :root{
-      --primary:#1a73e8;--sidebar-bg:#1a2a44;--border:#e0e7ff;--text:#202124;--bg:#fff;--bg-light:#f7f9fc;
-      --hover:#e8f0fe;--error:#d32f2f;--ok:#188038;--shadow:0 6px 24px rgba(0,0,0,.06)
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --primary-light: #e0e7ff;
+      --secondary: #48bb78;
+      --accent: #ed8936;
+      --danger: #f56565;
+      --warning: #ecc94b;
+      --success: #48bb78;
+      
+      --bg-primary: #ffffff;
+      --bg-secondary: #f7fafc;
+      --bg-tertiary: #edf2f7;
+      --bg-sidebar: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --bg-card: #ffffff;
+      --bg-hover: #f1f5f9;
+      --bg-active: #e2e8f0;
+      
+      --text-primary: #1a202c;
+      --text-secondary: #4a5568;
+      --text-muted: #718096;
+      --text-light: #a0aec0;
+      --text-white: #ffffff;
+      
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e0;
+      --border-dark: #a0aec0;
+      
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-fast: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg-light)}
 
-    .appbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);
-      display:flex;align-items:center;gap:12px;padding:10px 12px}
-    .app-title{font-weight:600}
-    .spacer{flex:1}
-    .icon-btn{appearance:none;border:0;background:transparent;cursor:pointer;padding:8px;border-radius:10px}
-    .icon-btn:hover{background:#f1f5ff}
-    .ham{width:24px;height:2px;background:#222;position:relative;display:block}
-    .ham::before,.ham::after{content:"";position:absolute;left:0;right:0;height:2px;background:#222}
-    .ham::before{top:-7px}.ham::after{top:7px}
+    * {
+      box-sizing: border-box;
+    }
 
-    .layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 54px)}
-    aside#sidebar{background:var(--sidebar-bg);color:#fff;padding:16px;border-right:1px solid rgba(255,255,255,.08);overflow:auto}
-    .sb-title{font-size:16px;font-weight:600;margin-bottom:10px}
-    .sb-note{font-size:12px;opacity:.9;margin-bottom:10px}
-    .sb-search input{width:100%;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;margin-bottom:10px}
-    .tpl-list{display:grid;gap:6px}
-    .tpl-btn{width:100%;text-align:left;background:#334466;color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;transition:.15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tpl-btn:hover{background:#3b4e78}
-    .tpl-btn.active{background:var(--primary);font-weight:600}
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
 
-    main{padding:16px;overflow:auto}
-    .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:var(--shadow);margin-bottom:12px}
-    h3{margin:6px 0 10px;font-size:16px}
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      font-size: 14px;
+      overflow-x: hidden;
+    }
 
-    /* обновлено: добавили поле Номер строки */
-    .filters{display:grid;grid-template-columns:1fr 260px 140px;gap:8px;align-items:center}
-    .filters input, .filters select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
-    .muted{font-size:12px;opacity:.8}
-    .link{color:var(--primary);cursor:pointer}
-    .link:hover{text-decoration:underline}
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-light);
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow-sm);
+    }
 
-    #preview{min-height:220px;border:1px solid var(--border);border-radius:10px;background:#fafbff;padding:12px;overflow:auto}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .btn{border:0;border-radius:10px;padding:10px 12px;font-size:14px;cursor:pointer}
-    .btn-primary{background:var(--primary);color:#fff}
-    .btn-secondary{background:#eef1f7}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .error{color:var(--error);font-size:13px;margin-top:6px;white-space:pre-wrap}
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      max-width: 100%;
+    }
 
-    .drawer{display:none;margin-top:8px}
-    .drawer.open{display:block}
-    .table-wrap{border:1px solid var(--border);border-radius:10px;overflow:auto;max-height:55vh;background:#fff}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{border-bottom:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
-    thead th{position:sticky;top:0;background:#f4f6fb;z-index:1}
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
 
-    .scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.2s;z-index:55}
-    .scrim.show{opacity:1;pointer-events:auto}
-    .drawer-side{position:fixed;inset:0 30% 0 0;max-width:80vw;background:var(--sidebar-bg);color:#fff;padding:14px;transform:translateX(-100%);transition:transform .2s ease;z-index:60;overflow:auto;border-right:1px solid rgba(255,255,255,.08)}
-    .drawer-side.open{transform:none}
+    .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+      color: var(--text-secondary);
+    }
 
-    @media (max-width:1199px){ .layout{grid-template-columns:260px 1fr} }
-    @media (max-width:767px){
-      .layout{display:block}
-      aside#sidebar{display:none}
-      .filters{grid-template-columns:1fr 1fr}
-      .filters input#rowNumberInput{grid-column:1 / -1}
+    .menu-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-sidebar);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ===== LAYOUT ===== */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: calc(100vh - 57px);
+      background: var(--bg-secondary);
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      background: var(--bg-sidebar);
+      color: var(--text-white);
+      padding: 24px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.1);
+      pointer-events: none;
+    }
+
+    .sidebar-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar-header {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 13px;
+      opacity: 0.8;
+      line-height: 1.5;
+    }
+
+    .sidebar-subtitle code {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    .search-container {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 14px;
+      transition: var(--transition);
+      backdrop-filter: blur(10px);
+    }
+
+    .search-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+    }
+
+    .templates-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .template-item {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      color: white;
+      text-decoration: none;
+      transition: var(--transition);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .template-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .template-item.active {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: var(--shadow-md);
+    }
+
+    .template-icon {
+      width: 20px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .template-name {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      padding: 24px;
+      overflow-y: auto;
+      background: var(--bg-secondary);
+    }
+
+    .content-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      transition: var(--transition);
+    }
+
+    .content-section:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .section-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--bg-primary);
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-primary);
+    }
+
+    .section-title i {
+      color: var(--primary);
+      width: 20px;
+    }
+
+    .section-content {
+      padding: 24px;
+    }
+
+    /* ===== FILTERS ===== */
+    .filters-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input {
+      padding: 12px 16px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-light);
+    }
+
+    .form-select {
+      padding: 12px 16px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: var(--transition);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .refresh-btn {
+      padding: 12px 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .refresh-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .filters-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+    }
+
+    .match-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      font-weight: 500;
+    }
+
+    .toggle-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .toggle-link:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    /* ===== PREVIEW ===== */
+    .preview-container {
+      min-height: 300px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      background: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-content {
+      padding: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    .preview-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      text-align: center;
+      min-height: 250px;
+    }
+
+    .preview-empty i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .preview-empty h4 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .preview-empty p {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    /* ===== ACTIONS ===== */
+    .actions-container {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-medium);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-hover);
+      border-color: var(--border-dark);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: #38a169;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      left: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ===== ERROR MESSAGES ===== */
+    .error-message {
+      background: #fed7d7;
+      border: 1px solid #feb2b2;
+      color: #c53030;
+      padding: 12px 16px;
+      border-radius: var(--radius-lg);
+      font-size: 13px;
+      margin-top: 12px;
+      white-space: pre-wrap;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .error-message i {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ===== COLLAPSIBLE SECTIONS ===== */
+    .collapsible {
+      transition: var(--transition);
+      overflow: hidden;
+    }
+
+    .collapsible:not(.open) {
+      display: none;
+    }
+
+    .collapsible.open {
+      display: block;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== TABLES ===== */
+    .table-container {
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--bg-primary);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th {
+      background: var(--bg-tertiary);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-medium);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .data-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    .data-table tr:hover {
+      background: var(--bg-hover);
+      cursor: pointer;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ===== CHIPS ===== */
+    .chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      min-height: 44px;
+      align-items: flex-start;
+    }
+
+    .chip {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-medium);
+      padding: 4px 10px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    .chip.missing {
+      background: #fed7d7;
+      border-color: #feb2b2;
+      color: #c53030;
+    }
+
+    .chip.unused {
+      background: #fefcbf;
+      border-color: #f6e05e;
+      color: #975a16;
+    }
+
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 20px;
+    }
+
+    /* ===== DIAGNOSTICS ===== */
+    .diagnostics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .diagnostic-item {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+
+    .diagnostic-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===== MOBILE OVERLAY ===== */
+    .mobile-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition);
+    }
+
+    .mobile-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .mobile-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 320px;
+      max-width: 85vw;
+      background: var(--bg-sidebar);
+      transform: translateX(-100%);
+      transition: var(--transition);
+      z-index: 201;
+      overflow-y: auto;
+    }
+
+    .mobile-sidebar.open {
+      transform: translateX(0);
+    }
+
+    .mobile-sidebar-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .close-sidebar {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+    }
+
+    .close-sidebar:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 280px 1fr;
+      }
+      
+      .sidebar {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-layout {
+        display: block;
+      }
+      
+      .sidebar {
+        display: none;
+      }
+      
+      .menu-btn {
+        display: flex;
+      }
+      
+      .header-content {
+        padding: 12px 16px;
+      }
+      
+      .main-content {
+        padding: 16px;
+      }
+      
+      .section-content {
+        padding: 20px 16px;
+      }
+      
+      .filters-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      .diagnostics-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .actions-container {
+        flex-direction: column;
+      }
+      
+      .btn {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header-content {
+        padding: 10px 12px;
+      }
+      
+      .main-content {
+        padding: 12px;
+      }
+      
+      .section-content {
+        padding: 16px 12px;
+      }
+      
+      .logo {
+        font-size: 16px;
+      }
+      
+      .logo-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+    }
+
+    /* ===== LOADING STATES ===== */
+    .loading-skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: var(--radius-md);
+    }
+
+    @keyframes loading {
+      0% {
+        background-position: 200% 0;
+      }
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    .template-skeleton {
+      height: 48px;
+      margin-bottom: 8px;
+    }
+
+    /* ===== NOTIFICATIONS ===== */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 16px;
+      background: var(--success);
+      color: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      transform: translateX(100%);
+      transition: var(--transition);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      max-width: 300px;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.error {
+      background: var(--danger);
+    }
+
+    .notification.warning {
+      background: var(--warning);
+      color: var(--text-primary);
     }
   </style>
 </head>
 <body>
-  <div class="appbar">
-    <button id="menuBtn" class="icon-btn" aria-label="Открыть меню"><span class="ham"></span></button>
-    <div class="app-title">Автоматизация писем</div>
-    <div class="spacer"></div>
-  </div>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-left">
+        <button class="menu-btn" id="menuBtn" aria-label="Открыть меню">
+          <i class="fas fa-bars"></i>
+        </button>
+        <a href="#" class="logo">
+          <div class="logo-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <span>Автоматизация писем</span>
+        </a>
+      </div>
+      <div class="header-actions">
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span>Готов к работе</span>
+        </div>
+      </div>
+    </div>
+  </header>
 
-  <!-- Mobile sidebar drawer -->
-  <div id="scrim" class="scrim" aria-hidden="true"></div>
-  <aside id="drawerSide" class="drawer-side" aria-hidden="true">
-    <div class="sb-title">Шаблоны (.docx)</div>
-    <div class="sb-note">Теги <code>[[Поле]]</code>. Шрифты/отступы — как в Word.</div>
-    <div class="sb-search"><input id="tplSearchMobile" placeholder="Поиск шаблона…"></div>
-    <div id="tplListMobile" class="tpl-list">Загрузка…</div>
+  <!-- Mobile Overlay -->
+  <div class="mobile-overlay" id="mobileOverlay"></div>
+
+  <!-- Mobile Sidebar -->
+  <aside class="mobile-sidebar" id="mobileSidebar">
+    <div class="mobile-sidebar-header">
+      <div class="sidebar-title">
+        <i class="fas fa-file-word"></i>
+        Шаблоны
+      </div>
+      <button class="close-sidebar" id="closeSidebar">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="sidebar-content">
+      <div class="sidebar-subtitle">
+        Теги <code>[[Поле]]</code>. Шрифты и отступы сохраняются как в Word.
+      </div>
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="search-input" id="mobileTemplateSearch" placeholder="Поиск шаблона...">
+      </div>
+      <div class="templates-list" id="mobileTemplatesList">
+        <div class="loading-skeleton template-skeleton"></div>
+        <div class="loading-skeleton template-skeleton"></div>
+        <div class="loading-skeleton template-skeleton"></div>
+      </div>
+    </div>
   </aside>
 
-  <div class="layout">
-    <!-- Sidebar (tablet/desktop) -->
-    <aside id="sidebar">
-      <div class="sb-title">Шаблоны (.docx)</div>
-      <div class="sb-note">Теги <code>[[Поле]]</code>. Шрифты/отступы — как в Word.</div>
-      <div class="sb-search"><input id="tplSearch" placeholder="Поиск шаблона…"></div>
-      <div id="templatesList" class="tpl-list">Загрузка…</div>
+  <!-- Main Layout -->
+  <div class="main-layout">
+    <!-- Desktop Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-content">
+        <div class="sidebar-header">
+          <div class="sidebar-title">
+            <i class="fas fa-file-word"></i>
+            Шаблоны документов
+          </div>
+          <div class="sidebar-subtitle">
+            Используйте теги <code>[[Поле]]</code> в ваших .docx файлах. Форматирование и стили сохраняются.
+          </div>
+        </div>
+        
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" id="templateSearch" placeholder="Найти шаблон...">
+        </div>
+        
+        <div class="templates-list" id="templatesList">
+          <div class="loading-skeleton template-skeleton"></div>
+          <div class="loading-skeleton template-skeleton"></div>
+          <div class="loading-skeleton template-skeleton"></div>
+          <div class="loading-skeleton template-skeleton"></div>
+        </div>
+      </div>
     </aside>
 
-    <main>
-      <!-- Фильтры + выбор записи + Номер строки -->
-      <section class="card">
-        <h3>Данные для письма</h3>
-        <div class="filters">
-          <input id="smartQuery" placeholder="Фильтр по всем полям (пример: Филиал=Тихорецкие ОС=Ростелеком «Номер_ТУ=123»). Просто текст — общий поиск">
-          <select id="recordSelect"><option value="">— выберите запись —</option></select>
-          <!-- НОВОЕ: выбор номера строки -->
-          <input id="rowNumberInput" type="number" min="2" placeholder="№ строки (со 2)">
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Data Filters Section -->
+      <section class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-filter"></i>
+            Настройка данных
+          </h2>
         </div>
-        <div class="muted" style="margin-top:6px">
-          <span id="matchInfo">Совпадений: 0</span> •
-          <span class="link" id="toggleRegistry">Показать реестр</span> •
-          <span class="link" id="toggleDiag">Показать диагностику</span>
-        </div>
-      </section>
-
-      <!-- Превью письма + действия -->
-      <section class="card">
-        <h3>Письмо</h3>
-        <div id="preview">Выберите шаблон и задайте фильтр/строку.</div>
-        <div id="errorTpl" class="error"></div>
-        <div class="actions">
-          <button class="btn btn-primary" id="downloadBtn" disabled>Скачать .docx</button>
-          <button class="btn btn-secondary" id="copyBtn" disabled>Скопировать письмо</button>
-        </div>
-      </section>
-
-      <!-- Скрытые разделы -->
-      <section class="card drawer" id="registryDrawer">
-        <h3 style="margin-top:0">Реестр (просмотр)</h3>
-        <div class="table-wrap" id="tableWrap"></div>
-      </section>
-
-      <section class="card drawer" id="diagDrawer">
-        <h3 style="margin-top:0">Диагностика соответствия</h3>
-        <div class="muted">Теги в выбранном шаблоне</div>
-        <div id="tplTags" class="table-wrap" style="padding:8px;border:1px dashed var(--border);border-radius:10px;background:#f7f9ff">—</div>
-        <div class="muted" style="margin-top:8px">Заголовки в таблице</div>
-        <div id="sheetHeaders" class="table-wrap" style="padding:8px;border:1px dashed var(--border);border-radius:10px;background:#f7f9ff">—</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
-          <div>
-            <div class="muted">Отсутствуют в таблице</div>
-            <div id="missingInSheet" class="table-wrap" style="padding:8px;border:1px dashed var(--border);border-radius:10px;background:#f7f9ff">—</div>
+        <div class="section-content">
+          <div class="filters-grid">
+            <div class="input-group">
+              <label class="input-label">Умный поиск</label>
+              <input 
+                type="text" 
+                class="form-input" 
+                id="smartQuery" 
+                placeholder="Пример: Филиал=Тихорецкие ОС=Ростелеком &quot;Номер_ТУ=123&quot; или просто текст для общего поиска"
+              >
+            </div>
+            <div class="input-group">
+              <label class="input-label">Выбор записи</label>
+              <select class="form-select" id="recordSelect">
+                <option value="">— выберите запись —</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Номер строки</label>
+              <div style="display: flex; gap: 8px;">
+                <input 
+                  type="number" 
+                  class="form-input" 
+                  id="rowNumberInput" 
+                  min="2" 
+                  placeholder="№ строки"
+                  style="width: 100px;"
+                >
+                <button class="refresh-btn" id="refreshData" title="Обновить данные">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
-            <div class="muted">Лишние столбцы</div>
-            <div id="unusedHeaders" class="table-wrap" style="padding:8px;border:1px dashed var(--border);border-radius:10px;background:#f7f9ff">—</div>
+          
+          <div class="filters-info">
+            <div class="match-info" id="matchInfo">
+              <i class="fas fa-database"></i>
+              Совпадений: 0
+            </div>
+            <a href="#" class="toggle-link" id="toggleRegistry">
+              <i class="fas fa-table"></i>
+              Показать реестр
+            </a>
+            <a href="#" class="toggle-link" id="toggleDiagnostics">
+              <i class="fas fa-stethoscope"></i>
+              Диагностика
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Letter Preview Section -->
+      <section class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-eye"></i>
+            Предварительный просмотр
+          </h2>
+        </div>
+        <div class="section-content">
+          <div class="preview-container">
+            <div class="preview-content" id="previewContent">
+              <div class="preview-empty">
+                <i class="fas fa-file-alt"></i>
+                <h4>Выберите шаблон и настройте данные</h4>
+                <p>Письмо появится здесь после выбора шаблона и указания строки данных</p>
+              </div>
+            </div>
+          </div>
+          
+          <div id="errorMessage"></div>
+          
+          <div class="actions-container">
+            <button class="btn btn-primary" id="downloadBtn" disabled>
+              <i class="fas fa-download"></i>
+              Скачать .docx
+            </button>
+            <button class="btn btn-success" id="copyBtn" disabled>
+              <i class="fas fa-copy"></i>
+              Скопировать текст
+            </button>
+            <button class="btn btn-secondary" id="regenerateBtn" disabled>
+              <i class="fas fa-redo"></i>
+              Пересоздать
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Registry Section (Collapsible) -->
+      <section class="content-section collapsible" id="registrySection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-table"></i>
+            Реестр данных
+          </h2>
+        </div>
+        <div class="section-content">
+          <div class="table-container" id="registryTableContainer">
+            <div class="preview-empty">
+              <i class="fas fa-table"></i>
+              <h4>Данные не загружены</h4>
+              <p>Подключите Google Таблицу для просмотра данных</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagnostics Section (Collapsible) -->
+      <section class="content-section collapsible" id="diagnosticsSection">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-stethoscope"></i>
+            Диагностика соответствия
+          </h2>
+        </div>
+        <div class="section-content">
+          <div class="diagnostic-item">
+            <div class="diagnostic-label">Теги в шаблоне</div>
+            <div class="chips-container" id="templateTags">
+              <div class="empty-state">Выберите шаблон</div>
+            </div>
+          </div>
+          
+          <div class="diagnostic-item">
+            <div class="diagnostic-label">Заголовки в таблице</div>
+            <div class="chips-container" id="sheetHeaders">
+              <div class="empty-state">Загрузите данные</div>
+            </div>
+          </div>
+          
+          <div class="diagnostics-grid">
+            <div class="diagnostic-item">
+              <div class="diagnostic-label">Отсутствуют в таблице</div>
+              <div class="chips-container" id="missingTags">
+                <div class="empty-state">—</div>
+              </div>
+            </div>
+            <div class="diagnostic-item">
+              <div class="diagnostic-label">Неиспользуемые столбцы</div>
+              <div class="chips-container" id="unusedHeaders">
+                <div class="empty-state">—</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </main>
   </div>
 
+  <!-- Notification -->
+  <div class="notification" id="notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="notificationText">Успешно!</span>
+  </div>
+
   <script>
     // ===== НАСТРОЙКИ =====
-    const GITHUB_USER = "anatoliy031";
-    const GITHUB_REPO = "letter-automation";
-    const GITHUB_TEMPLATES_FOLDER = "templates";
-    const DEFAULT_GOOGLE_SHEET_ID = "17vdbh0KHIZ-lAsqFXp6HtQA-NBymV5Wh";
+    const CONFIG = {
+      GITHUB_USER: "anatoliy031",
+      GITHUB_REPO: "letter-automation", 
+      GITHUB_TEMPLATES_FOLDER: "templates",
+      DEFAULT_GOOGLE_SHEET_ID: "17vdbh0KHIZ-lAsqFXp6HtQA-NBymV5Wh",
+      AUTO_GENERATE_DELAY: 300,
+      NOTIFICATION_DURATION: 3000
+    };
 
-    // ===== СОСТОЯНИЕ =====
-    let templatesMeta = [];
-    let selectedTemplate = null;
-    let excelHeaders = [];
-    let excelRows = [];
-    let currentTplTags = [];
-    let lastGeneratedBlob = null;
+    // ===== СОСТОЯНИЕ ПРИЛОЖЕНИЯ =====
+    const AppState = {
+      templates: [],
+      selectedTemplate: null,
+      excelHeaders: [],
+      excelRows: [],
+      currentTags: [],
+      lastGeneratedBlob: null,
+      isLoading: false
+    };
 
-    // ===== UI =====
-    const $menuBtn = document.getElementById('menuBtn');
-    const $drawerSide = document.getElementById('drawerSide');
-    const $scrim = document.getElementById('scrim');
+    // ===== ЭЛЕМЕНТЫ DOM =====
+    const Elements = {
+      // Mobile
+      menuBtn: document.getElementById('menuBtn'),
+      mobileOverlay: document.getElementById('mobileOverlay'),
+      mobileSidebar: document.getElementById('mobileSidebar'),
+      closeSidebar: document.getElementById('closeSidebar'),
+      mobileTemplateSearch: document.getElementById('mobileTemplateSearch'),
+      mobileTemplatesList: document.getElementById('mobileTemplatesList'),
+      
+      // Desktop
+      templateSearch: document.getElementById('templateSearch'),
+      templatesList: document.getElementById('templatesList'),
+      
+      // Filters
+      smartQuery: document.getElementById('smartQuery'),
+      recordSelect: document.getElementById('recordSelect'),
+      rowNumberInput: document.getElementById('rowNumberInput'),
+      refreshData: document.getElementById('refreshData'),
+      matchInfo: document.getElementById('matchInfo'),
+      
+      // Preview
+      previewContent: document.getElementById('previewContent'),
+      errorMessage: document.getElementById('errorMessage'),
+      downloadBtn: document.getElementById('downloadBtn'),
+      copyBtn: document.getElementById('copyBtn'),
+      regenerateBtn: document.getElementById('regenerateBtn'),
+      
+      // Toggles
+      toggleRegistry: document.getElementById('toggleRegistry'),
+      toggleDiagnostics: document.getElementById('toggleDiagnostics'),
+      registrySection: document.getElementById('registrySection'),
+      diagnosticsSection: document.getElementById('diagnosticsSection'),
+      
+      // Registry
+      registryTableContainer: document.getElementById('registryTableContainer'),
+      
+      // Diagnostics
+      templateTags: document.getElementById('templateTags'),
+      sheetHeaders: document.getElementById('sheetHeaders'),
+      missingTags: document.getElementById('missingTags'),
+      unusedHeaders: document.getElementById('unusedHeaders'),
+      
+      // Notification
+      notification: document.getElementById('notification'),
+      notificationText: document.getElementById('notificationText')
+    };
 
-    const $tplSearch = document.getElementById('tplSearch');
-    const $tplSearchMobile = document.getElementById('tplSearchMobile');
-    const $sidebarList = document.getElementById('templatesList');
-    const $tplListMobile = document.getElementById('tplListMobile');
+    // ===== UTILITY FUNCTIONS =====
+    const Utils = {
+      isMobile: () => window.matchMedia("(max-width: 768px)").matches,
+      
+      csvUrlFromSheetId: (id) => `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`,
+      
+      normalizeKey: (str) => {
+        if (!str) return "";
+        return str.normalize("NFC")
+          .replace(/\u00A0/g, ' ')
+          .replace(/№/g, 'N')
+          .replace(/[.,;:()]/g, '')
+          .replace(/\s+/g, '_')
+          .replace(/-+/g, '_')
+          .replace(/__+/g, '_')
+          .trim();
+      },
+      
+      makeAliases: (header) => {
+        const h = header ?? "";
+        const withUnderscore = h.replace(/\s+/g, '_');
+        const withSpaces = h.replace(/_/g, ' ');
+        const norm = Utils.normalizeKey(h);
+        return [...new Set([
+          h, withUnderscore, withSpaces,
+          h.toLowerCase(), withUnderscore.toLowerCase(), 
+          withSpaces.toLowerCase(), norm, norm.toLowerCase()
+        ])];
+      },
+      
+      buildDataObject: (headers, row) => {
+        const obj = {};
+        headers.forEach((h, i) => {
+          Utils.makeAliases(h).forEach(alias => obj[alias] = row[i] ?? "");
+        });
+        return obj;
+      },
+      
+      debounce: (func, wait) => {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+    };
 
-    const $smartQuery = document.getElementById('smartQuery');
-    const $recordSelect = document.getElementById('recordSelect');
-    const $rowNumberInput = document.getElementById('rowNumberInput');
-    const $matchInfo = document.getElementById('matchInfo');
+    // ===== NOTIFICATION SYSTEM =====
+    const Notifications = {
+      show: (message, type = 'success') => {
+        Elements.notificationText.textContent = message;
+        Elements.notification.className = `notification ${type}`;
+        
+        const icon = Elements.notification.querySelector('i');
+        icon.className = type === 'success' ? 'fas fa-check-circle' :
+                        type === 'error' ? 'fas fa-exclamation-circle' :
+                        type === 'warning' ? 'fas fa-exclamation-triangle' :
+                        'fas fa-info-circle';
+        
+        Elements.notification.classList.add('show');
+        
+        setTimeout(() => {
+          Elements.notification.classList.remove('show');
+        }, CONFIG.NOTIFICATION_DURATION);
+      }
+    };
 
-    const $preview = document.getElementById('preview');
-    const $errorTpl = document.getElementById('errorTpl');
-    const $downloadBtn = document.getElementById('downloadBtn');
-    const $copyBtn = document.getElementById('copyBtn');
-
-    const $tableWrap = document.getElementById('tableWrap');
-    const $toggleRegistry = document.getElementById('toggleRegistry');
-    const $toggleDiag = document.getElementById('toggleDiag');
-    const $registryDrawer = document.getElementById('registryDrawer');
-    const $diagDrawer = document.getElementById('diagDrawer');
-
-    const $tplTags = document.getElementById('tplTags');
-    const $sheetHeaders = document.getElementById('sheetHeaders');
-    const $missingInSheet = document.getElementById('missingInSheet');
-    const $unusedHeaders = document.getElementById('unusedHeaders');
-
-    // ===== HELPERS =====
-    const isMobile = () => window.matchMedia("(max-width: 767px)").matches;
-    function setError(el, msg){ el.textContent = msg || ""; }
-    function clearPreview(){ $preview.innerHTML = "Выберите шаблон и задайте фильтр/строку."; $downloadBtn.disabled = true; $copyBtn.disabled = true; }
-    function csvUrlFromSheetId(id){ return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`; }
-    const uniq = arr => [...new Set(arr)];
-    const renderChips = list => (!list||!list.length) ? "—" : list.map(k=>`<code style="background:#eee;border-radius:6px;padding:2px 6px;margin:2px 4px 0 0;display:inline-block">${k}</code>`).join(" ");
-
-    function normalizeKey(s){
-      if(!s) return "";
-      return s.normalize("NFC").replace(/\u00A0/g,' ').replace(/№/g,'N').replace(/[.,;:()]/g,'').replace(/\s+/g,'_').replace(/-+/g,'_').replace(/__+/g,'_').trim();
-    }
-    function makeAliases(header){
-      const h = header ?? "";
-      const withUnderscore = h.replace(/\s+/g,'_');
-      const withSpaces = h.replace(/_/g,' ');
-      const norm = normalizeKey(h);
-      return uniq([h, withUnderscore, withSpaces, h.toLowerCase(), withUnderscore.toLowerCase(), withSpaces.toLowerCase(), norm, norm.toLowerCase()]);
-    }
-    function buildDataObject(headers,row){
-      const obj={};
-      headers.forEach((h,i)=>{ makeAliases(h).forEach(alias=>obj[alias] = row[i] ?? ""); });
-      return obj;
-    }
+    // ===== ERROR HANDLING =====
+    const ErrorHandler = {
+      display: (message) => {
+        Elements.errorMessage.innerHTML = message ? 
+          `<div class="error-message"><i class="fas fa-exclamation-triangle"></i><span>${message}</span></div>` : '';
+      },
+      
+      clear: () => {
+        Elements.errorMessage.innerHTML = '';
+      }
+    };
 
     // ===== MOBILE SIDEBAR =====
-    function openSide(){ $drawerSide.classList.add('open'); $drawerSide.setAttribute('aria-hidden','false'); $scrim.classList.add('show'); $scrim.setAttribute('aria-hidden','false'); }
-    function closeSide(){ $drawerSide.classList.remove('open'); $drawerSide.setAttribute('aria-hidden','true'); $scrim.classList.remove('show'); $scrim.setAttribute('aria-hidden','true'); }
-    $menuBtn.addEventListener('click', openSide);
-    $scrim.addEventListener('click', closeSide);
-    window.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSide(); });
-
-    // ===== ТЕМПЛЕЙТЫ (.docx) =====
-    async function fetchTemplatesList(){
-      try{
-        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
-        const res = await fetch(apiUrl);
-        if(!res.ok) throw new Error("GitHub API error");
-        const files = await res.json();
-        const docs = files.filter(f=>/\.docx$/i.test(f.name)).map(f=>({name:f.name, url:f.download_url}));
-        templatesMeta = docs;
-        renderTemplates();
-      }catch(e){
-        $sidebarList.innerHTML = "Ошибка загрузки шаблонов";
-        $tplListMobile.innerHTML = "Ошибка загрузки шаблонов";
-      }
-    }
-    function renderTemplates(){
-      const filter = v => (t)=> t.name.toLowerCase().includes(v.trim().toLowerCase());
-      const renderList = (container, query)=>{
-        if(!templatesMeta.length){ container.innerHTML = "Нет .docx-шаблонов"; return; }
-        container.innerHTML = templatesMeta.filter(filter(query||"")).map((t,idx)=>
-          `<button class="tpl-btn ${selectedTemplate && selectedTemplate.name===t.name?'active':''}" onclick="selectTemplate(${idx}, '${container.id}')" title="${t.name.replace(/\.docx$/i,'')}">${t.name.replace(/\.docx$/i,'')}</button>`
-        ).join("");
-      };
-      renderList($sidebarList, $tplSearch.value||"");
-      renderList($tplListMobile, $tplSearchMobile.value||"");
-    }
-    window.selectTemplate = async function(idx, fromId){
-      selectedTemplate = templatesMeta[idx];
-      renderTemplates();
-      if(fromId==='tplListMobile' && isMobile()) closeSide();
-      setError($errorTpl,"");
-      await updateTplTags();
-      triggerAutoGenerate();
-    }
-    document.getElementById('tplSearch').addEventListener('input', renderTemplates);
-    document.getElementById('tplSearchMobile').addEventListener('input', renderTemplates);
-
-    // Извлечь [[теги]] из docx
-    async function extractDocxTags(url){
-      try{
-        const res = await fetch(url);
-        if(!res.ok) throw new Error("Не удалось загрузить шаблон");
-        const ab = await res.arrayBuffer();
-        const zip = new PizZip(ab);
-        const xmlNames = Object.keys(zip.files).filter(n=>n.startsWith('word/') && n.endsWith('.xml'));
-        const tagSet = new Set();
-        const rgx = /\[\[\s*([^\]]+?)\s*\]\]/g;
-        xmlNames.forEach(name=>{
-          try{
-            const txt = zip.files[name].asText();
-            let m; while((m=rgx.exec(txt))!==null){ tagSet.add(m[1].trim().split('|')[0].trim()); }
-          }catch(_){}
+    const MobileSidebar = {
+      open: () => {
+        Elements.mobileOverlay.classList.add('show');
+        Elements.mobileSidebar.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      },
+      
+      close: () => {
+        Elements.mobileOverlay.classList.remove('show');
+        Elements.mobileSidebar.classList.remove('open');
+        document.body.style.overflow = '';
+      },
+      
+      init: () => {
+        Elements.menuBtn.addEventListener('click', MobileSidebar.open);
+        Elements.closeSidebar.addEventListener('click', MobileSidebar.close);
+        Elements.mobileOverlay.addEventListener('click', MobileSidebar.close);
+        
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') MobileSidebar.close();
         });
-        return Array.from(tagSet).sort((a,b)=>a.localeCompare(b));
-      }catch(e){ return []; }
-    }
-    async function updateTplTags(){
-      if(!selectedTemplate){ currentTplTags=[]; return; }
-      currentTplTags = await extractDocxTags(selectedTemplate.url);
-      $tplTags.innerHTML = renderChips(currentTplTags);
-      updateDiagnostics();
-    }
-
-    // ===== GOOGLE SHEETS =====
-    async function loadGoogleSheet(sheetId){
-      try{
-        const res = await fetch(csvUrlFromSheetId(sheetId));
-        if(!res.ok) throw new Error("Не удалось загрузить таблицу (проверьте доступ по ссылке)");
-        const csv = await res.text();
-        const wb = XLSX.read(csv,{type:'string'});
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(ws,{header:1});
-        if(!json.length) throw new Error("Пустая таблица");
-        excelHeaders = json[0].map(h=>(h??"").toString().trim());
-        excelRows = json.slice(1);
-        renderRegistryTable();
-        $sheetHeaders.innerHTML = renderChips(excelHeaders);
-        updateDiagnostics();
-        refreshSmartFilter(); // первичное применение фильтра
-      }catch(e){
-        excelHeaders=[]; excelRows=[];
-        renderRegistryTable();
-        $sheetHeaders.innerHTML = "—";
-        setError($errorTpl, e.message || "Ошибка загрузки таблицы");
-        updateDiagnostics();
       }
-    }
-    function renderRegistryTable(){
-      if(!excelHeaders.length){ $tableWrap.innerHTML=""; return; }
-      let html = `<table><thead><tr>`;
-      excelHeaders.forEach(h=> html += `<th>${h}</th>`);
-      html += `</tr></thead><tbody>`;
-      excelRows.forEach((row,i)=>{
-        html += `<tr onclick="selectRowIndex(${i})">`;
-        excelHeaders.forEach((h,j)=> html += `<td>${row[j] ?? ''}</td>`);
-        html += `</tr>`;
-      });
-      html += `</tbody></table>`;
-      $tableWrap.innerHTML = html;
-    }
-    window.selectRowIndex = function(i){
-      // из скрытого реестра
-      $recordSelect.value = String(i);
-      $rowNumberInput.value = i + 2;
-      triggerAutoGenerate();
-      document.querySelector('#preview').scrollIntoView({behavior:'smooth', block:'start'});
-    }
+    };
 
-    // ===== ИНТЕЛЛЕКТУАЛЬНЫЕ ФИЛЬТРЫ =====
-    function parseSmartQuery(q){
-      const tokens = [];
-      let cur = '', inQuotes = false;
-      for(let i=0;i<q.length;i++){
-        const ch = q[i];
-        if(ch === '"' || ch === '«' || ch === '»'){ inQuotes = !inQuotes; continue; }
-        if(!inQuotes && /\s/.test(ch)){
-          if(cur.trim()) tokens.push(cur.trim());
-          cur = '';
-        } else cur += ch;
+    // ===== TEMPLATES MANAGEMENT =====
+    const Templates = {
+      fetch: async () => {
+        try {
+          const apiUrl = `https://api.github.com/repos/${CONFIG.GITHUB_USER}/${CONFIG.GITHUB_REPO}/contents/${CONFIG.GITHUB_TEMPLATES_FOLDER}`;
+          const response = await fetch(apiUrl);
+          
+          if (!response.ok) {
+            throw new Error('Ошибка загрузки шаблонов с GitHub');
+          }
+          
+          const files = await response.json();
+          const docxFiles = files
+            .filter(file => /\.docx$/i.test(file.name))
+            .map(file => ({
+              name: file.name,
+              url: file.download_url,
+              displayName: file.name.replace(/\.docx$/i, '')
+            }));
+          
+          AppState.templates = docxFiles;
+          Templates.render();
+          
+          if (docxFiles.length === 0) {
+            Notifications.show('Шаблоны не найдены', 'warning');
+          }
+          
+        } catch (error) {
+          console.error('Error fetching templates:', error);
+          Templates.renderError();
+          Notifications.show('Ошибка загрузки шаблонов', 'error');
+        }
+      },
+      
+      render: () => {
+        const renderList = (container, searchQuery = '') => {
+          if (!AppState.templates.length) {
+            container.innerHTML = '<div class="preview-empty"><i class="fas fa-inbox"></i><p>Шаблоны не найдены</p></div>';
+            return;
+          }
+          
+          const filteredTemplates = AppState.templates.filter(template =>
+            template.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          
+          if (filteredTemplates.length === 0) {
+            container.innerHTML = '<div class="preview-empty"><i class="fas fa-search"></i><p>Ничего не найдено</p></div>';
+            return;
+          }
+          
+          container.innerHTML = filteredTemplates.map((template, index) => `
+            <div class="template-item ${AppState.selectedTemplate?.name === template.name ? 'active' : ''}" 
+                 onclick="Templates.select(${AppState.templates.indexOf(template)})" 
+                 title="${template.displayName}">
+              <i class="fas fa-file-word template-icon"></i>
+              <span class="template-name">${template.displayName}</span>
+            </div>
+          `).join('');
+        };
+        
+        renderList(Elements.templatesList, Elements.templateSearch.value);
+        renderList(Elements.mobileTemplatesList, Elements.mobileTemplateSearch.value);
+      },
+      
+      renderError: () => {
+        const errorHtml = '<div class="preview-empty"><i class="fas fa-exclamation-circle"></i><p>Ошибка загрузки шаблонов</p></div>';
+        Elements.templatesList.innerHTML = errorHtml;
+        Elements.mobileTemplatesList.innerHTML = errorHtml;
+      },
+      
+      select: async (index) => {
+        try {
+          AppState.selectedTemplate = AppState.templates[index];
+          Templates.render();
+          ErrorHandler.clear();
+          
+          if (Utils.isMobile()) {
+            MobileSidebar.close();
+          }
+          
+          await Templates.extractTags();
+          Preview.generate();
+          
+        } catch (error) {
+          console.error('Error selecting template:', error);
+          ErrorHandler.display('Ошибка выбора шаблона');
+        }
+      },
+      
+      extractTags: async () => {
+        if (!AppState.selectedTemplate) {
+          AppState.currentTags = [];
+          Diagnostics.update();
+          return;
+        }
+        
+        try {
+          const response = await fetch(AppState.selectedTemplate.url);
+          if (!response.ok) throw new Error('Не удалось загрузить шаблон');
+          
+          const arrayBuffer = await response.arrayBuffer();
+          const zip = new PizZip(arrayBuffer);
+          const xmlFiles = Object.keys(zip.files).filter(name => 
+            name.startsWith('word/') && name.endsWith('.xml')
+          );
+          
+          const tagSet = new Set();
+          const tagRegex = /\[\[\s*([^\]]+?)\s*\]\]/g;
+          
+          xmlFiles.forEach(fileName => {
+            try {
+              const xmlContent = zip.files[fileName].asText();
+              let match;
+              while ((match = tagRegex.exec(xmlContent)) !== null) {
+                const tag = match[1].trim().split('|')[0].trim();
+                if (tag) tagSet.add(tag);
+              }
+            } catch (e) {
+              console.warn(`Error processing ${fileName}:`, e);
+            }
+          });
+          
+          AppState.currentTags = Array.from(tagSet).sort((a, b) => 
+            a.localeCompare(b, 'ru', { numeric: true })
+          );
+          
+          Diagnostics.update();
+          
+        } catch (error) {
+          console.error('Error extracting tags:', error);
+          AppState.currentTags = [];
+          Diagnostics.update();
+        }
+      },
+      
+      init: () => {
+        Elements.templateSearch.addEventListener('input', Templates.render);
+        Elements.mobileTemplateSearch.addEventListener('input', Templates.render);
+        
+        // Глобальная функция для onclick
+        window.Templates = { select: Templates.select };
       }
-      if(cur.trim()) tokens.push(cur.trim());
-      return tokens;
-    }
-    function applySmartFilter(q){
-      if(!excelRows.length) return [];
-      const tokens = parseSmartQuery(q);
-      const headerIdx = new Map(excelHeaders.map((h,i)=>[h,i]));
-      const pairs = [], free = [];
-      tokens.forEach(t=>{
-        const eq = t.indexOf('=');
-        if(eq>0){ pairs.push({key:t.slice(0,eq).trim(), val:t.slice(eq+1).trim()}); }
-        else free.push(t);
-      });
-      const matchVal = (cell,needle) => String(cell??'').toLowerCase().includes(String(needle).toLowerCase());
-      const rowsIdx = [];
-      for(let i=0;i<excelRows.length;i++){
-        const row = excelRows[i];
-        let ok = true;
-        for(const {key,val} of pairs){
-          let colIndex = headerIdx.get(key);
-          if(colIndex === undefined){
-            const target = key.toLowerCase();
-            for(let c=0;c<excelHeaders.length;c++){
-              const aliases = makeAliases(excelHeaders[c]).map(a=>a.toLowerCase());
-              if(aliases.includes(target)){ colIndex = c; break; }
+    };
+
+    // ===== DATA MANAGEMENT =====
+    const DataManager = {
+      load: async (sheetId = CONFIG.DEFAULT_GOOGLE_SHEET_ID) => {
+        try {
+          AppState.isLoading = true;
+          
+          const response = await fetch(Utils.csvUrlFromSheetId(sheetId));
+          if (!response.ok) {
+            throw new Error('Не удалось загрузить таблицу. Проверьте настройки доступа.');
+          }
+          
+          const csvText = await response.text();
+          const workbook = XLSX.read(csvText, { type: 'string' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          
+          if (!jsonData.length) {
+            throw new Error('Таблица пустая');
+          }
+          
+          AppState.excelHeaders = jsonData[0].map(header => 
+            (header ?? "").toString().trim()
+          );
+          AppState.excelRows = jsonData.slice(1);
+          
+          Registry.render();
+          Diagnostics.update();
+          Filters.refresh();
+          
+          Notifications.show(`Загружено строк: ${AppState.excelRows.length}`, 'success');
+          
+        } catch (error) {
+          console.error('Error loading data:', error);
+          AppState.excelHeaders = [];
+          AppState.excelRows = [];
+          Registry.renderEmpty();
+          ErrorHandler.display(error.message);
+          Notifications.show('Ошибка загрузки данных', 'error');
+        } finally {
+          AppState.isLoading = false;
+        }
+      },
+      
+      init: () => {
+        Elements.refreshData.addEventListener('click', () => {
+          DataManager.load();
+        });
+      }
+    };
+
+    // ===== FILTERS =====
+    const Filters = {
+      parseSmartQuery: (query) => {
+        const tokens = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < query.length; i++) {
+          const char = query[i];
+          
+          if (char === '"' || char === '«' || char === '»') {
+            inQuotes = !inQuotes;
+            continue;
+          }
+          
+          if (!inQuotes && /\s/.test(char)) {
+            if (current.trim()) {
+              tokens.push(current.trim());
+              current = '';
+            }
+          } else {
+            current += char;
+          }
+        }
+        
+        if (current.trim()) {
+          tokens.push(current.trim());
+        }
+        
+        return tokens;
+      },
+      
+      apply: (query) => {
+        if (!AppState.excelRows.length) return [];
+        
+        const tokens = Filters.parseSmartQuery(query);
+        const headerIndexMap = new Map(
+          AppState.excelHeaders.map((header, index) => [header, index])
+        );
+        
+        const keyValuePairs = [];
+        const freeTextTerms = [];
+        
+        tokens.forEach(token => {
+          const equalIndex = token.indexOf('=');
+          if (equalIndex > 0) {
+            keyValuePairs.push({
+              key: token.slice(0, equalIndex).trim(),
+              value: token.slice(equalIndex + 1).trim()
+            });
+          } else {
+            freeTextTerms.push(token);
+          }
+        });
+        
+        const matchesValue = (cellValue, searchTerm) => 
+          String(cellValue ?? '').toLowerCase().includes(String(searchTerm).toLowerCase());
+        
+        const matchingRowIndexes = [];
+        
+        for (let rowIndex = 0; rowIndex < AppState.excelRows.length; rowIndex++) {
+          const row = AppState.excelRows[rowIndex];
+          let isMatch = true;
+          
+          // Check key-value pairs
+          for (const { key, value } of keyValuePairs) {
+            let columnIndex = headerIndexMap.get(key);
+            
+            if (columnIndex === undefined) {
+              const targetKey = key.toLowerCase();
+              for (let colIndex = 0; colIndex < AppState.excelHeaders.length; colIndex++) {
+                const aliases = Utils.makeAliases(AppState.excelHeaders[colIndex])
+                  .map(alias => alias.toLowerCase());
+                if (aliases.includes(targetKey)) {
+                  columnIndex = colIndex;
+                  break;
+                }
+              }
+            }
+            
+            if (columnIndex === undefined || !matchesValue(row[columnIndex], value)) {
+              isMatch = false;
+              break;
             }
           }
-          if(colIndex === undefined || !matchVal(row[colIndex], val)){ ok = false; break; }
+          
+          if (!isMatch) continue;
+          
+          // Check free text terms
+          for (const term of freeTextTerms) {
+            const hasMatch = row.some(cell => matchesValue(cell, term));
+            if (!hasMatch) {
+              isMatch = false;
+              break;
+            }
+          }
+          
+          if (isMatch) {
+            matchingRowIndexes.push(rowIndex);
+          }
         }
-        if(!ok) continue;
-        for(const word of free){
-          const hit = row.some(cell => matchVal(cell, word));
-          if(!hit){ ok = false; break; }
+        
+        return matchingRowIndexes;
+      },
+      
+      populateSelect: (indexes) => {
+        const createLabel = (rowIndex) => {
+          const row = AppState.excelRows[rowIndex] || [];
+          const getValue = (fieldName) => 
+            row[AppState.excelHeaders.indexOf(fieldName)] || "";
+          
+          const name = getValue("Кому_ФИО") || getValue("ФИО") || "";
+          const branch = getValue("Филиал") || "";
+          const document = getValue("Номер_ТУ") || getValue("Номер_документа") || "";
+          const os = getValue("ОС") || "";
+          
+          const parts = [];
+          if (name) parts.push(name);
+          if (branch) parts.push(branch);
+          if (os) parts.push(os);
+          if (document) parts.push(`ТУ:${document}`);
+          
+          const label = parts.join(" • ") || `Строка ${rowIndex + 2}`;
+          return `${label} — №${rowIndex + 2}`;
+        };
+        
+        const options = ['<option value="">— выберите запись —</option>'];
+        const limitedIndexes = indexes.slice(0, 500); // Limit for performance
+        
+        limitedIndexes.forEach(index => {
+          options.push(`<option value="${index}">${createLabel(index)}</option>`);
+        });
+        
+        Elements.recordSelect.innerHTML = options.join('');
+      },
+      
+      refresh: () => {
+        const query = Elements.smartQuery.value || "";
+        const matchingIndexes = Filters.apply(query);
+        
+        Elements.matchInfo.innerHTML = `
+          <i class="fas fa-database"></i>
+          Совпадений: ${matchingIndexes.length} / ${AppState.excelRows.length}
+        `;
+        
+        Filters.populateSelect(matchingIndexes);
+        
+        // Auto-select if only one match
+        if (matchingIndexes.length === 1) {
+          Elements.recordSelect.value = String(matchingIndexes[0]);
+          Elements.rowNumberInput.value = matchingIndexes[0] + 2;
+        } else if (!Elements.rowNumberInput.value) {
+          Elements.recordSelect.value = "";
         }
-        if(ok) rowsIdx.push(i);
+        
+        Preview.generate();
+      },
+      
+      init: () => {
+        const debouncedRefresh = Utils.debounce(Filters.refresh, CONFIG.AUTO_GENERATE_DELAY);
+        
+        Elements.smartQuery.addEventListener('input', debouncedRefresh);
+        
+        Elements.recordSelect.addEventListener('change', () => {
+          const value = Elements.recordSelect.value;
+          if (value !== "" && !isNaN(+value)) {
+            Elements.rowNumberInput.value = (+value) + 2;
+          }
+          Preview.generate();
+        });
+        
+        Elements.rowNumberInput.addEventListener('change', Filters.selectByRowNumber);
+        Elements.rowNumberInput.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter') Filters.selectByRowNumber();
+        });
+      },
+      
+      selectByRowNumber: () => {
+        const rowNumber = parseInt(Elements.rowNumberInput.value, 10);
+        if (isNaN(rowNumber) || rowNumber < 2 || rowNumber > AppState.excelRows.length + 1) {
+          ErrorHandler.display(`Неверный номер строки. Допустимо от 2 до ${AppState.excelRows.length + 1}`);
+          return;
+        }
+        
+        const index = rowNumber - 2;
+        const option = [...Elements.recordSelect.options]
+          .find(opt => opt.value === String(index));
+        
+        if (option) {
+          Elements.recordSelect.value = String(index);
+        } else {
+          Elements.recordSelect.value = "";
+        }
+        
+        Preview.generate();
       }
-      return rowsIdx;
-    }
-    function populateRecordSelect(indexes){
-      const makeLabel = (i)=>{
-        const row = excelRows[i]||[];
-        const pick = (name)=> row[(excelHeaders.indexOf(name))] || "";
-        const fio = pick("Кому_ФИО") || pick("ФИО") || "";
-        const fil = pick("Филиал") || "";
-        const tu  = pick("Номер_ТУ") || pick("Номер_документа") || "";
-        const os  = pick("ОС") || "";
-        let parts = [];
-        if(fio) parts.push(fio);
-        if(fil) parts.push(fil);
-        if(os) parts.push(os);
-        if(tu) parts.push(`ТУ:${tu}`);
-        const label = parts.join(" • ") || `Строка ${i+2}`;
-        return `${label} — №${i+2}`;
-      };
-      $recordSelect.innerHTML = `<option value="">— выберите запись —</option>` + indexes.slice(0,500).map(i=>`<option value="${i}">${makeLabel(i)}</option>`).join("");
-    }
-    function refreshSmartFilter(){
-      const q = $smartQuery.value || "";
-      const idxs = applySmartFilter(q);
-      $matchInfo.textContent = `Совпадений: ${idxs.length} / всего: ${excelRows.length}`;
-      populateRecordSelect(idxs);
-      // Автовыбор одной найденной строки
-      if(idxs.length === 1){
-        $recordSelect.value = String(idxs[0]);
-        $rowNumberInput.value = idxs[0] + 2;
-      } else if(!$rowNumberInput.value){
-        $recordSelect.value = "";
+    };
+
+    // ===== REGISTRY =====
+    const Registry = {
+      render: () => {
+        if (!AppState.excelHeaders.length) {
+          Registry.renderEmpty();
+          return;
+        }
+        
+        let tableHtml = '<table class="data-table"><thead><tr>';
+        AppState.excelHeaders.forEach(header => {
+          tableHtml += `<th>${header}</th>`;
+        });
+        tableHtml += '</tr></thead><tbody>';
+        
+        AppState.excelRows.forEach((row, index) => {
+          tableHtml += `<tr onclick="Registry.selectRow(${index})" title="Выбрать строку ${index + 2}">`;
+          AppState.excelHeaders.forEach((header, columnIndex) => {
+            tableHtml += `<td>${row[columnIndex] ?? ''}</td>`;
+          });
+          tableHtml += '</tr>';
+        });
+        
+        tableHtml += '</tbody></table>';
+        Elements.registryTableContainer.innerHTML = tableHtml;
+      },
+      
+      renderEmpty: () => {
+        Elements.registryTableContainer.innerHTML = `
+          <div class="preview-empty">
+            <i class="fas fa-table"></i>
+            <h4>Данные не загружены</h4>
+            <p>Подключите Google Таблицу для просмотра данных</p>
+          </div>
+        `;
+      },
+      
+      selectRow: (index) => {
+        Elements.recordSelect.value = String(index);
+        Elements.rowNumberInput.value = index + 2;
+        Preview.generate();
+        
+        // Smooth scroll to preview
+        document.querySelector('#previewContent').scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      },
+      
+      init: () => {
+        // Global function for onclick
+        window.Registry = { selectRow: Registry.selectRow };
       }
-      triggerAutoGenerate();
-    }
-    $smartQuery.addEventListener('input', refreshSmartFilter);
+    };
 
-    // Синхронизация выбора записи <-> номер строки
-    $recordSelect.addEventListener('change', ()=>{
-      const v = $recordSelect.value;
-      if(v!=="" && !isNaN(+v)){ $rowNumberInput.value = (+v) + 2; }
-      triggerAutoGenerate();
-    });
-
-    // НОВОЕ: ручной ввод номера строки
-    function selectByRowNumber(){
-      const n = parseInt($rowNumberInput.value, 10);
-      if(isNaN(n) || n < 2 || n > excelRows.length + 1){
-        setError($errorTpl, "Неверный номер строки: допустимо от 2 до " + (excelRows.length + 1));
-        return;
+    // ===== DIAGNOSTICS =====
+    const Diagnostics = {
+      renderChips: (items, type = 'default') => {
+        if (!items || !items.length) {
+          return '<div class="empty-state">—</div>';
+        }
+        
+        return items.map(item => 
+          `<span class="chip ${type}">${item}</span>`
+        ).join('');
+      },
+      
+      update: () => {
+        // Template tags
+        Elements.templateTags.innerHTML = AppState.currentTags.length ? 
+          Diagnostics.renderChips(AppState.currentTags) :
+          '<div class="empty-state">Выберите шаблон</div>';
+        
+        // Sheet headers
+        Elements.sheetHeaders.innerHTML = AppState.excelHeaders.length ?
+          Diagnostics.renderChips(AppState.excelHeaders) :
+          '<div class="empty-state">Загрузите данные</div>';
+        
+        if (AppState.currentTags.length && AppState.excelHeaders.length) {
+          const headerAliasMap = new Map();
+          AppState.excelHeaders.forEach(header => {
+            Utils.makeAliases(header).forEach(alias => {
+              headerAliasMap.set(alias, header);
+            });
+          });
+          
+          const missingTags = [];
+          const usedHeaders = new Set();
+          
+          AppState.currentTags.forEach(tag => {
+            const candidates = [
+              tag, 
+              tag.toLowerCase(), 
+              Utils.normalizeKey(tag), 
+              Utils.normalizeKey(tag).toLowerCase(),
+              tag.replace(/\s+/g, '_'),
+              tag.replace(/_/g, ' ')
+            ].filter((item, index, arr) => arr.indexOf(item) === index);
+            
+            let matched = null;
+            for (const candidate of candidates) {
+              if (headerAliasMap.has(candidate)) {
+                matched = headerAliasMap.get(candidate);
+                break;
+              }
+            }
+            
+            if (!matched) {
+              missingTags.push(tag);
+            } else {
+              usedHeaders.add(matched);
+            }
+          });
+          
+          const unusedHeaders = AppState.excelHeaders.filter(header => 
+            !usedHeaders.has(header)
+          );
+          
+          Elements.missingTags.innerHTML = missingTags.length ?
+            Diagnostics.renderChips(missingTags, 'missing') :
+            '<div class="empty-state">Все теги найдены</div>';
+          
+          Elements.unusedHeaders.innerHTML = unusedHeaders.length ?
+            Diagnostics.renderChips(unusedHeaders, 'unused') :
+            '<div class="empty-state">Все столбцы используются</div>';
+        } else {
+          Elements.missingTags.innerHTML = '<div class="empty-state">—</div>';
+          Elements.unusedHeaders.innerHTML = '<div class="empty-state">—</div>';
+        }
       }
-      const idx = n - 2;
-      // если индекс есть в текущем списке результатов — выберем его в селекте
-      const opt = [...$recordSelect.options].find(o => o.value === String(idx));
-      if(opt) $recordSelect.value = String(idx);
-      else $recordSelect.value = ""; // вне фильтра — всё равно сгенерим по номеру
-      triggerAutoGenerate();
-    }
-    $rowNumberInput.addEventListener('change', selectByRowNumber);
-    $rowNumberInput.addEventListener('keyup', (e)=>{ if(e.key==='Enter') selectByRowNumber(); });
+    };
 
-    // ===== ДИАГНОСТИКА =====
-    function updateDiagnostics(){
-      const hdrAliases = new Map();
-      excelHeaders.forEach(h => makeAliases(h).forEach(a => hdrAliases.set(a,h)));
-      const missing = [];
-      const used = new Set();
-      currentTplTags.forEach(tag=>{
-        const cands = uniq([tag, tag.toLowerCase(), normalizeKey(tag), normalizeKey(tag).toLowerCase(), tag.replace(/\s+/g,'_'), tag.replace(/_/g,' ')]);
-        let matched = null;
-        for(const c of cands){ if(hdrAliases.has(c)){ matched = hdrAliases.get(c); break; } }
-        if(!matched) missing.push(tag); else used.add(matched);
+    // ===== PREVIEW =====
+    const Preview = {
+      showEmpty: () => {
+        Elements.previewContent.innerHTML = `
+          <div class="preview-empty">
+            <i class="fas fa-file-alt"></i>
+            <h4>Выберите шаблон и настройте данные</h4>
+            <p>Письмо появится здесь после выбора шаблона и указания строки данных</p>
+          </div>
+        `;
+        Elements.downloadBtn.disabled = true;
+        Elements.copyBtn.disabled = true;
+        Elements.regenerateBtn.disabled = true;
+      },
+      
+      showLoading: () => {
+        Elements.previewContent.innerHTML = `
+          <div class="preview-empty">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h4>Генерация документа...</h4>
+            <p>Пожалуйста, подождите</p>
+          </div>
+        `;
+      },
+      
+      generate: Utils.debounce(async () => {
+        ErrorHandler.clear();
+        AppState.lastGeneratedBlob = null;
+        
+        // Determine record index
+        let recordIndex = null;
+        if (Elements.rowNumberInput.value) {
+          const rowNumber = parseInt(Elements.rowNumberInput.value, 10);
+          if (!isNaN(rowNumber) && rowNumber >= 2 && rowNumber <= AppState.excelRows.length + 1) {
+            recordIndex = rowNumber - 2;
+          }
+        }
+        
+        if (recordIndex === null && Elements.recordSelect.value) {
+          recordIndex = parseInt(Elements.recordSelect.value, 10);
+        }
+        
+        if (!AppState.selectedTemplate || recordIndex === null || isNaN(recordIndex)) {
+          Preview.showEmpty();
+          return;
+        }
+        
+        if (recordIndex < 0 || recordIndex >= AppState.excelRows.length) {
+          ErrorHandler.display('Выбранная строка не существует');
+          Preview.showEmpty();
+          return;
+        }
+        
+        try {
+          Preview.showLoading();
+          
+          const response = await fetch(AppState.selectedTemplate.url);
+          if (!response.ok) {
+            throw new Error('Не удалось загрузить шаблон');
+          }
+          
+          const arrayBuffer = await response.arrayBuffer();
+          const zip = new PizZip(arrayBuffer);
+          
+          const doc = new window.docxtemplater(zip, {
+            delimiters: { start: '[[', end: ']]' }
+          });
+          
+          const data = Utils.buildDataObject(AppState.excelHeaders, AppState.excelRows[recordIndex]);
+          doc.setData(data);
+          
+          try {
+            doc.render();
+          } catch (renderError) {
+            let details = "";
+            if (renderError.properties?.errors) {
+              details = renderError.properties.errors
+                .map(err => `• ${err.properties?.explanation || err.message || "Ошибка"}`)
+                .join("\n");
+            }
+            throw new Error("Ошибка формирования шаблона.\n" + details);
+          }
+          
+          const output = doc.getZip().generate({ type: "blob" });
+          AppState.lastGeneratedBlob = output;
+          
+          // Generate preview
+          const buffer = await output.arrayBuffer();
+          const result = await window.mammoth.convertToHtml({ arrayBuffer: buffer });
+          
+          Elements.previewContent.innerHTML = result.value || 
+            '<div class="preview-empty"><i class="fas fa-file-alt"></i><p>Документ сформирован, но превью недоступно</p></div>';
+          
+          Elements.downloadBtn.disabled = false;
+          Elements.copyBtn.disabled = false;
+          Elements.regenerateBtn.disabled = false;
+          
+          if (Utils.isMobile()) {
+            document.querySelector('#previewContent').scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+          
+        } catch (error) {
+          console.error('Preview generation error:', error);
+          ErrorHandler.display(error.message || "Ошибка формирования документа");
+          Preview.showEmpty();
+        }
+      }, CONFIG.AUTO_GENERATE_DELAY),
+      
+      download: () => {
+        if (!AppState.lastGeneratedBlob || !AppState.selectedTemplate) return;
+        
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(AppState.lastGeneratedBlob);
+        link.href = url;
+        
+        const templateName = AppState.selectedTemplate.displayName;
+        const rowNumber = Elements.rowNumberInput.value ? 
+          parseInt(Elements.rowNumberInput.value, 10) : 
+          (Elements.recordSelect.value ? (parseInt(Elements.recordSelect.value, 10) + 2) : 'X');
+        
+        link.download = `${templateName}_строка_${rowNumber}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        
+        Notifications.show('Документ скачан!', 'success');
+      },
+      
+      copy: async () => {
+        const htmlContent = Elements.previewContent.innerHTML;
+        if (!htmlContent) return;
+        
+        try {
+          const htmlBlob = new Blob([htmlContent], { type: "text/html" });
+          const textBlob = new Blob([
+            Elements.previewContent.innerText || Elements.previewContent.textContent || ""
+          ], { type: "text/plain" });
+          
+          const data = [new ClipboardItem({
+            "text/html": htmlBlob,
+            "text/plain": textBlob
+          })];
+          
+          await navigator.clipboard.write(data);
+          Notifications.show('Текст скопирован!', 'success');
+          
+        } catch (error) {
+          // Fallback for older browsers
+          const range = document.createRange();
+          range.selectNodeContents(Elements.previewContent);
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          
+          try {
+            document.execCommand('copy');
+            Notifications.show('Текст скопирован!', 'success');
+          } catch (e) {
+            Notifications.show('Ошибка копирования', 'error');
+          }
+          
+          selection.removeAllRanges();
+        }
+      },
+      
+      init: () => {
+        Elements.downloadBtn.addEventListener('click', Preview.download);
+        Elements.copyBtn.addEventListener('click', Preview.copy);
+        Elements.regenerateBtn.addEventListener('click', Preview.generate);
+      }
+    };
+
+    // ===== TOGGLE SECTIONS =====
+    const Toggles = {
+      toggle: (section, link, iconClass) => {
+        const isOpen = section.classList.contains('open');
+        section.classList.toggle('open');
+        
+        const icon = link.querySelector('i');
+        if (isOpen) {
+          link.innerHTML = `<i class="${iconClass}"></i> Показать ${link.textContent.includes('реестр') ? 'реестр' : 'диагностику'}`;
+        } else {
+          link.innerHTML = `<i class="fas fa-eye-slash"></i> Скрыть ${link.textContent.includes('реестр') ? 'реестр' : 'диагностику'}`;
+        }
+      },
+      
+      init: () => {
+        Elements.toggleRegistry.addEventListener('click', (e) => {
+          e.preventDefault();
+          Toggles.toggle(Elements.registrySection, Elements.toggleRegistry, 'fas fa-table');
+        });
+        
+        Elements.toggleDiagnostics.addEventListener('click', (e) => {
+          e.preventDefault();
+          Toggles.toggle(Elements.diagnosticsSection, Elements.toggleDiagnostics, 'fas fa-stethoscope');
+        });
+      }
+    };
+
+    // ===== KEYBOARD SHORTCUTS =====
+    const KeyboardShortcuts = {
+      init: () => {
+        document.addEventListener('keydown', (e) => {
+          // Ctrl/Cmd + D - Download
+          if ((e.ctrlKey || e.metaKey) && e.key === 'd' && !Elements.downloadBtn.disabled) {
+            e.preventDefault();
+            Preview.download();
+          }
+          
+          // Ctrl/Cmd + C - Copy (when preview is focused)
+          if ((e.ctrlKey || e.metaKey) && e.key === 'c' && 
+              Elements.previewContent.contains(e.target) && !Elements.copyBtn.disabled) {
+            e.preventDefault();
+            Preview.copy();
+          }
+          
+          // Ctrl/Cmd + R - Regenerate
+          if ((e.ctrlKey || e.metaKey) && e.key === 'r' && !Elements.regenerateBtn.disabled) {
+            e.preventDefault();
+            Preview.generate();
+          }
+          
+          // F5 - Refresh data
+          if (e.key === 'F5' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            DataManager.load();
+          }
+        });
+      }
+    };
+
+    // ===== INITIALIZATION =====
+    const App = {
+      init: async () => {
+        try {
+          // Initialize modules
+          MobileSidebar.init();
+          Templates.init();
+          DataManager.init();
+          Filters.init();
+          Registry.init();
+          Preview.init();
+          Toggles.init();
+          KeyboardShortcuts.init();
+          
+          // Load initial data
+          await Promise.all([
+            Templates.fetch(),
+            DataManager.load()
+          ]);
+          
+          // Set initial focus
+          setTimeout(() => {
+            if (!Utils.isMobile()) {
+              Elements.smartQuery.focus();
+            }
+          }, 500);
+          
+          console.log('✅ Приложение инициализировано успешно');
+          
+        } catch (error) {
+          console.error('❌ Ошибка инициализации приложения:', error);
+          Notifications.show('Ошибка инициализации приложения', 'error');
+        }
+      }
+    };
+
+    // ===== START APPLICATION =====
+    document.addEventListener('DOMContentLoaded', App.init);
+
+    // ===== SERVICE WORKER (для улучшения производительности) =====
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('✅ Service Worker зарегистрирован'))
+          .catch(() => console.log('ℹ️ Service Worker недоступен'));
       });
-      const unused = excelHeaders.filter(h=>!used.has(h));
-      $missingInSheet.innerHTML = renderChips(missing);
-      $unusedHeaders.innerHTML = renderChips(unused);
     }
 
-    // ===== ГЕНЕРАЦИЯ DOCX + PREVIEW (авто) =====
-    async function autoGenerate(){
-      setError($errorTpl,""); lastGeneratedBlob = null;
-      // приоритет: если задан номер строки — берём его, иначе — выбранный из списка
-      let recIdx = null;
-      if($rowNumberInput.value){
-        const n = parseInt($rowNumberInput.value,10);
-        if(!isNaN(n) && n>=2 && n<=excelRows.length+1) recIdx = n - 2;
+    // ===== PERFORMANCE MONITORING =====
+    window.addEventListener('load', () => {
+      if (performance.mark) {
+        performance.mark('app-loaded');
+        console.log('📊 Время загрузки приложения:', performance.now().toFixed(2) + 'ms');
       }
-      if(recIdx===null && $recordSelect.value) recIdx = parseInt($recordSelect.value,10);
-
-      if(!selectedTemplate || recIdx===null || isNaN(recIdx)){ clearPreview(); return; }
-
-      try{
-        const res = await fetch(selectedTemplate.url);
-        if(!res.ok) throw new Error("Не удалось загрузить шаблон");
-        const ab = await res.arrayBuffer();
-        const zip = new PizZip(ab);
-
-        const doc = new window.docxtemplater(zip, { delimiters:{start:'[[', end:']]'} });
-        const data = buildDataObject(excelHeaders, excelRows[recIdx]);
-        doc.setData(data);
-        try{ doc.render(); }
-        catch(e){
-          let details = "";
-          if(e.properties?.errors){ details = e.properties.errors.map(err=>`• ${err.properties?.explanation || err.message || "Ошибка"}`).join("\n"); }
-          throw new Error("Ошибка формирования шаблона.\n" + details);
-        }
-
-        const out = doc.getZip().generate({ type:"blob" });
-        lastGeneratedBlob = out;
-
-        const buf = await out.arrayBuffer();
-        const result = await window.mammoth.convertToHtml({ arrayBuffer:buf });
-        $preview.innerHTML = result.value || "<i>(Превью пустое — но .docx сформирован)</i>";
-        $downloadBtn.disabled = false;
-        $copyBtn.disabled = false;
-
-        if(isMobile()){ document.querySelector('#preview').scrollIntoView({behavior:'smooth', block:'start'}); }
-      }catch(e){
-        console.error(e); setError($errorTpl, e.message || "Ошибка формирования");
-        $downloadBtn.disabled = true; $copyBtn.disabled = true;
-      }
-    }
-    function triggerAutoGenerate(){
-      clearTimeout(triggerAutoGenerate._t);
-      triggerAutoGenerate._t = setTimeout(autoGenerate, 150);
-    }
-
-    // Скачать .docx
-    function downloadDocx(){
-      if(!lastGeneratedBlob || !selectedTemplate) return;
-      const a = document.createElement("a");
-      const url = URL.createObjectURL(lastGeneratedBlob);
-      a.href = url;
-      const clean = selectedTemplate.name.replace(/\.docx$/i,'');
-      const rec = $rowNumberInput.value ? parseInt($rowNumberInput.value,10) : ($recordSelect.value ? (parseInt($recordSelect.value,10)+2) : 'X');
-      a.download = `${clean}_строка_${rec}.docx`;
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-    }
-    document.getElementById('downloadBtn').addEventListener('click', downloadDocx);
-
-    // Скопировать письмо
-    async function copyLetter(){
-      const html = $preview.innerHTML;
-      if(!html) return;
-      try{
-        const blobHtml = new Blob([html], { type: "text/html" });
-        const blobText = new Blob([ $preview.innerText || $preview.textContent || "" ], { type: "text/plain" });
-        const data = [ new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText }) ];
-        await navigator.clipboard.write(data);
-      }catch(_){
-        const range = document.createRange();
-        range.selectNodeContents($preview);
-        const sel = window.getSelection();
-        sel.removeAllRanges(); sel.addRange(range);
-        document.execCommand('copy');
-        sel.removeAllRanges();
-      }
-      const btn = document.getElementById('copyBtn');
-      const old = btn.textContent; btn.textContent = "Скопировано!";
-      setTimeout(()=> btn.textContent = old, 1200);
-    }
-    document.getElementById('copyBtn').addEventListener('click', copyLetter);
-
-    // Тумблеры спрятанных секций
-    function toggle(el){ el.classList.toggle('open'); }
-    $toggleRegistry.addEventListener('click', ()=> toggle($registryDrawer));
-    $toggleDiag.addEventListener('click', ()=> toggle($diagDrawer));
-
-    // Инициализация
-    (function init(){
-      fetchTemplatesList();
-      loadGoogleSheet(DEFAULT_GOOGLE_SHEET_ID);
-      setTimeout(()=> document.getElementById('smartQuery').focus(), 300);
-    })();
+    });
   </script>
 </body>
 </html>
+        
