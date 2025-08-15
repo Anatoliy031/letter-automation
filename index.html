@@ -21,8 +21,7 @@
   <style>
     :root{
       --primary:#1a73e8;--sidebar-bg:#1a2a44;--border:#e0e7ff;--text:#202124;--bg:#fff;--bg-light:#f7f9fc;
-      --hover:#e8f0fe;--error:#d32f2f;--ok:#188038;--warning:#f57c00;--shadow:0 6px 24px rgba(0,0,0,.06);
-      --success-bg:#e8f5e8;--warning-bg:#fff3e0;--error-bg:#ffebee;
+      --hover:#e8f0fe;--error:#d32f2f;--ok:#188038;--shadow:0 6px 24px rgba(0,0,0,.06)
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -52,58 +51,19 @@
     .card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:var(--shadow);margin-bottom:12px}
     h3{margin:6px 0 10px;font-size:16px}
 
-    /* Улучшенные фильтры */
-    .filters-section{margin-bottom:16px}
-    .filters-tabs{display:flex;gap:4px;margin-bottom:12px}
-    .filter-tab{padding:8px 16px;border:1px solid var(--border);background:var(--bg-light);border-radius:8px 8px 0 0;cursor:pointer;font-size:14px;transition:.2s}
-    .filter-tab.active{background:var(--bg);border-bottom-color:var(--bg);font-weight:500}
-    .filter-tab:hover:not(.active){background:var(--hover)}
-
-    .filter-content{border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:12px;background:var(--bg)}
-    .filter-content.hidden{display:none}
-
-    /* Текстовый фильтр */
-    .text-filter-wrapper{position:relative}
-    .filter-help{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:#666;cursor:help}
-    .filter-tooltip{position:absolute;top:100%;right:0;background:#333;color:#fff;padding:8px;border-radius:6px;font-size:12px;width:300px;z-index:100;display:none}
-    .filter-help:hover + .filter-tooltip{display:block}
-
-    /* Визуальные фильтры */
-    .visual-filters{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px}
-    .filter-group{display:flex;flex-direction:column;gap:4px}
-    .filter-label{font-size:12px;color:#666;font-weight:500}
-    .filter-select{padding:8px;border:1px solid var(--border);border-radius:6px;background:#fff}
-
-    .record-selection{display:grid;grid-template-columns:1fr 140px;gap:8px;align-items:center}
-    .record-selection input, .record-selection select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
-
-    /* Статусы валидации */
-    .validation-status{padding:8px 12px;border-radius:6px;font-size:13px;margin:8px 0}
-    .validation-status.success{background:var(--success-bg);color:var(--ok);border:1px solid var(--ok)}
-    .validation-status.warning{background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning)}
-    .validation-status.error{background:var(--error-bg);color:var(--error);border:1px solid var(--error)}
-
-    /* Предпросмотр данных */
-    .data-preview{background:#f8f9ff;border:1px solid #e1e5ff;border-radius:8px;padding:12px;margin:8px 0}
-    .preview-title{font-weight:500;margin-bottom:8px;color:#1a73e8}
-    .preview-fields{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px}
-    .preview-field{display:flex;flex-direction:column;gap:2px}
-    .field-name{font-size:11px;color:#666;font-weight:500;text-transform:uppercase}
-    .field-value{font-size:13px;padding:4px 8px;background:#fff;border:1px solid #e0e7ff;border-radius:4px;min-height:20px}
-    .field-value.empty{color:#999;font-style:italic}
-
+    /* обновлено: добавили поле Номер строки */
+    .filters{display:grid;grid-template-columns:1fr 260px 140px;gap:8px;align-items:center}
+    .filters input, .filters select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
     .muted{font-size:12px;opacity:.8}
     .link{color:var(--primary);cursor:pointer}
     .link:hover{text-decoration:underline}
 
     #preview{min-height:220px;border:1px solid var(--border);border-radius:10px;background:#fafbff;padding:12px;overflow:auto}
     .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .btn{border:0;border-radius:10px;padding:10px 12px;font-size:14px;cursor:pointer;transition:.2s}
+    .btn{border:0;border-radius:10px;padding:10px 12px;font-size:14px;cursor:pointer}
     .btn-primary{background:var(--primary);color:#fff}
     .btn-secondary{background:#eef1f7}
     .btn:disabled{opacity:.6;cursor:not-allowed}
-    .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
-
     .error{color:var(--error);font-size:13px;margin-top:6px;white-space:pre-wrap}
 
     .drawer{display:none;margin-top:8px}
@@ -118,21 +78,12 @@
     .drawer-side{position:fixed;inset:0 30% 0 0;max-width:80vw;background:var(--sidebar-bg);color:#fff;padding:14px;transform:translateX(-100%);transition:transform .2s ease;z-index:60;overflow:auto;border-right:1px solid rgba(255,255,255,.08)}
     .drawer-side.open{transform:none}
 
-    /* Индикаторы загрузки */
-    .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid #f3f3f3;border-top:2px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite}
-    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-
-    .notification{position:fixed;top:70px;right:16px;background:var(--success-bg);color:var(--ok);border:1px solid var(--ok);padding:12px 16px;border-radius:8px;z-index:100;transform:translateX(100%);transition:.3s;box-shadow:var(--shadow)}
-    .notification.show{transform:translateX(0)}
-
     @media (max-width:1199px){ .layout{grid-template-columns:260px 1fr} }
     @media (max-width:767px){
       .layout{display:block}
       aside#sidebar{display:none}
-      .record-selection{grid-template-columns:1fr}
-      .record-selection input#rowNumberInput{grid-column:1}
-      .visual-filters{grid-template-columns:1fr 1fr}
-      .preview-fields{grid-template-columns:1fr}
+      .filters{grid-template-columns:1fr 1fr}
+      .filters input#rowNumberInput{grid-column:1 / -1}
     }
   </style>
 </head>
@@ -142,9 +93,6 @@
     <div class="app-title">Автоматизация писем</div>
     <div class="spacer"></div>
   </div>
-
-  <!-- Уведомления -->
-  <div id="notification" class="notification"></div>
 
   <!-- Mobile sidebar drawer -->
   <div id="scrim" class="scrim" aria-hidden="true"></div>
@@ -165,52 +113,15 @@
     </aside>
 
     <main>
-      <!-- Улучшенные фильтры -->
+      <!-- Фильтры + выбор записи + Номер строки -->
       <section class="card">
-        <h3>Фильтрация данных</h3>
-        <div class="filters-section">
-          <div class="filters-tabs">
-            <div class="filter-tab active" data-tab="text">🔍 Текстовый поиск</div>
-            <div class="filter-tab" data-tab="visual">🎛️ Визуальные фильтры</div>
-          </div>
-          
-          <!-- Текстовый фильтр -->
-          <div class="filter-content" id="textFilter">
-            <div class="text-filter-wrapper">
-              <input id="smartQuery" placeholder="Фильтр по всем полям (пример: Филиал=Тихорецкие ОС=Ростелеком «Номер_ТУ=123»). Просто текст — общий поиск">
-              <span class="filter-help">?</span>
-              <div class="filter-tooltip">
-                <strong>Примеры фильтров:</strong><br>
-                • <code>Иванов</code> — поиск по всем полям<br>
-                • <code>Филиал=Тихорецкие</code> — точное совпадение<br>
-                • <code>ОС=Ростелеком Номер_ТУ=123</code> — несколько условий<br>
-                • <code>«Номер ТУ=456»</code> — поля с пробелами в кавычках
-              </div>
-            </div>
-          </div>
-
-          <!-- Визуальные фильтры -->
-          <div class="filter-content hidden" id="visualFilter">
-            <div class="visual-filters" id="visualFiltersContainer">
-              <div class="filter-group">
-                <div class="filter-label">Загрузка фильтров...</div>
-              </div>
-            </div>
-            <div style="margin-top:12px">
-              <button class="btn btn-secondary" id="clearFilters">Очистить все фильтры</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Статус валидации -->
-        <div id="validationStatus" class="validation-status" style="display:none"></div>
-
-        <!-- Выбор записи -->
-        <div class="record-selection">
+        <h3>Данные для письма</h3>
+        <div class="filters">
+          <input id="smartQuery" placeholder="Фильтр по всем полям (пример: Филиал=Тихорецкие ОС=Ростелеком «Номер_ТУ=123»). Просто текст — общий поиск">
           <select id="recordSelect"><option value="">— выберите запись —</option></select>
+          <!-- НОВОЕ: выбор номера строки -->
           <input id="rowNumberInput" type="number" min="2" placeholder="№ строки (со 2)">
         </div>
-        
         <div class="muted" style="margin-top:6px">
           <span id="matchInfo">Совпадений: 0</span> •
           <span class="link" id="toggleRegistry">Показать реестр</span> •
@@ -218,26 +129,13 @@
         </div>
       </section>
 
-      <!-- Предпросмотр данных записи -->
-      <section class="card" id="dataPreviewCard" style="display:none">
-        <h3>📋 Предпросмотр данных записи</h3>
-        <div id="dataPreview" class="data-preview">
-          <div class="preview-title">Данные для подстановки в шаблон:</div>
-          <div class="preview-fields" id="previewFields"></div>
-        </div>
-        <div class="muted">Эти данные будут использованы для генерации письма</div>
-      </section>
-
       <!-- Превью письма + действия -->
       <section class="card">
-        <h3>📄 Письмо</h3>
+        <h3>Письмо</h3>
         <div id="preview">Выберите шаблон и задайте фильтр/строку.</div>
         <div id="errorTpl" class="error"></div>
         <div class="actions">
-          <button class="btn btn-primary" id="downloadBtn" disabled>
-            <span class="btn-text">Скачать .docx</span>
-            <span class="loading-spinner" style="display:none"></span>
-          </button>
+          <button class="btn btn-primary" id="downloadBtn" disabled>Скачать .docx</button>
           <button class="btn btn-secondary" id="copyBtn" disabled>Скопировать письмо</button>
         </div>
       </section>
@@ -282,7 +180,6 @@
     let excelRows = [];
     let currentTplTags = [];
     let lastGeneratedBlob = null;
-    let visualFilters = {};
 
     // ===== UI =====
     const $menuBtn = document.getElementById('menuBtn');
@@ -315,11 +212,6 @@
     const $missingInSheet = document.getElementById('missingInSheet');
     const $unusedHeaders = document.getElementById('unusedHeaders');
 
-    const $validationStatus = document.getElementById('validationStatus');
-    const $dataPreviewCard = document.getElementById('dataPreviewCard');
-    const $previewFields = document.getElementById('previewFields');
-    const $notification = document.getElementById('notification');
-
     // ===== HELPERS =====
     const isMobile = () => window.matchMedia("(max-width: 767px)").matches;
     function setError(el, msg){ el.textContent = msg || ""; }
@@ -345,167 +237,343 @@
       return obj;
     }
 
-    // Уведомления
-    function showNotification(message, type = 'success') {
-      $notification.textContent = message;
-      $notification.className = `notification ${type}`;
-      $notification.classList.add('show');
-      setTimeout(() => $notification.classList.remove('show'), 3000);
-    }
+    // ===== MOBILE SIDEBAR =====
+    function openSide(){ $drawerSide.classList.add('open'); $drawerSide.setAttribute('aria-hidden','false'); $scrim.classList.add('show'); $scrim.setAttribute('aria-hidden','false'); }
+    function closeSide(){ $drawerSide.classList.remove('open'); $drawerSide.setAttribute('aria-hidden','true'); $scrim.classList.remove('show'); $scrim.setAttribute('aria-hidden','true'); }
+    $menuBtn.addEventListener('click', openSide);
+    $scrim.addEventListener('click', closeSide);
+    window.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSide(); });
 
-    // Индикатор загрузки
-    function setLoading(button, loading) {
-      const spinner = button.querySelector('.loading-spinner');
-      const text = button.querySelector('.btn-text');
-      if (loading) {
-        spinner.style.display = 'inline-block';
-        text.style.display = 'none';
-        button.disabled = true;
-      } else {
-        spinner.style.display = 'none';
-        text.style.display = 'inline';
-        button.disabled = false;
+    // ===== ТЕМПЛЕЙТЫ (.docx) =====
+    async function fetchTemplatesList(){
+      try{
+        const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_TEMPLATES_FOLDER}`;
+        const res = await fetch(apiUrl);
+        if(!res.ok) throw new Error("GitHub API error");
+        const files = await res.json();
+        const docs = files.filter(f=>/\.docx$/i.test(f.name)).map(f=>({name:f.name, url:f.download_url}));
+        templatesMeta = docs;
+        renderTemplates();
+      }catch(e){
+        $sidebarList.innerHTML = "Ошибка загрузки шаблонов";
+        $tplListMobile.innerHTML = "Ошибка загрузки шаблонов";
       }
     }
+    function renderTemplates(){
+      const filter = v => (t)=> t.name.toLowerCase().includes(v.trim().toLowerCase());
+      const renderList = (container, query)=>{
+        if(!templatesMeta.length){ container.innerHTML = "Нет .docx-шаблонов"; return; }
+        container.innerHTML = templatesMeta.filter(filter(query||"")).map((t,idx)=>
+          `<button class="tpl-btn ${selectedTemplate && selectedTemplate.name===t.name?'active':''}" onclick="selectTemplate(${idx}, '${container.id}')" title="${t.name.replace(/\.docx$/i,'')}">${t.name.replace(/\.docx$/i,'')}</button>`
+        ).join("");
+      };
+      renderList($sidebarList, $tplSearch.value||"");
+      renderList($tplListMobile, $tplSearchMobile.value||"");
+    }
+    window.selectTemplate = async function(idx, fromId){
+      selectedTemplate = templatesMeta[idx];
+      renderTemplates();
+      if(fromId==='tplListMobile' && isMobile()) closeSide();
+      setError($errorTpl,"");
+      await updateTplTags();
+      triggerAutoGenerate();
+    }
+    document.getElementById('tplSearch').addEventListener('input', renderTemplates);
+    document.getElementById('tplSearchMobile').addEventListener('input', renderTemplates);
 
-    // ===== ФИЛЬТРЫ =====
-    // Переключение вкладок фильтров
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.filter-content').forEach(c => c.classList.add('hidden'));
-        
-        tab.classList.add('active');
-        const targetTab = tab.getAttribute('data-tab');
-        document.getElementById(targetTab + 'Filter').classList.remove('hidden');
+    // Извлечь [[теги]] из docx
+    async function extractDocxTags(url){
+      try{
+        const res = await fetch(url);
+        if(!res.ok) throw new Error("Не удалось загрузить шаблон");
+        const ab = await res.arrayBuffer();
+        const zip = new PizZip(ab);
+        const xmlNames = Object.keys(zip.files).filter(n=>n.startsWith('word/') && n.endsWith('.xml'));
+        const tagSet = new Set();
+        const rgx = /\[\[\s*([^\]]+?)\s*\]\]/g;
+        xmlNames.forEach(name=>{
+          try{
+            const txt = zip.files[name].asText();
+            let m; while((m=rgx.exec(txt))!==null){ tagSet.add(m[1].trim().split('|')[0].trim()); }
+          }catch(_){}
+        });
+        return Array.from(tagSet).sort((a,b)=>a.localeCompare(b));
+      }catch(e){ return []; }
+    }
+    async function updateTplTags(){
+      if(!selectedTemplate){ currentTplTags=[]; return; }
+      currentTplTags = await extractDocxTags(selectedTemplate.url);
+      $tplTags.innerHTML = renderChips(currentTplTags);
+      updateDiagnostics();
+    }
+
+    // ===== GOOGLE SHEETS =====
+    async function loadGoogleSheet(sheetId){
+      try{
+        const res = await fetch(csvUrlFromSheetId(sheetId));
+        if(!res.ok) throw new Error("Не удалось загрузить таблицу (проверьте доступ по ссылке)");
+        const csv = await res.text();
+        const wb = XLSX.read(csv,{type:'string'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(ws,{header:1});
+        if(!json.length) throw new Error("Пустая таблица");
+        excelHeaders = json[0].map(h=>(h??"").toString().trim());
+        excelRows = json.slice(1);
+        renderRegistryTable();
+        $sheetHeaders.innerHTML = renderChips(excelHeaders);
+        updateDiagnostics();
+        refreshSmartFilter(); // первичное применение фильтра
+      }catch(e){
+        excelHeaders=[]; excelRows=[];
+        renderRegistryTable();
+        $sheetHeaders.innerHTML = "—";
+        setError($errorTpl, e.message || "Ошибка загрузки таблицы");
+        updateDiagnostics();
+      }
+    }
+    function renderRegistryTable(){
+      if(!excelHeaders.length){ $tableWrap.innerHTML=""; return; }
+      let html = `<table><thead><tr>`;
+      excelHeaders.forEach(h=> html += `<th>${h}</th>`);
+      html += `</tr></thead><tbody>`;
+      excelRows.forEach((row,i)=>{
+        html += `<tr onclick="selectRowIndex(${i})">`;
+        excelHeaders.forEach((h,j)=> html += `<td>${row[j] ?? ''}</td>`);
+        html += `</tr>`;
       });
+      html += `</tbody></table>`;
+      $tableWrap.innerHTML = html;
+    }
+    window.selectRowIndex = function(i){
+      // из скрытого реестра
+      $recordSelect.value = String(i);
+      $rowNumberInput.value = i + 2;
+      triggerAutoGenerate();
+      document.querySelector('#preview').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    // ===== ИНТЕЛЛЕКТУАЛЬНЫЕ ФИЛЬТРЫ =====
+    function parseSmartQuery(q){
+      const tokens = [];
+      let cur = '', inQuotes = false;
+      for(let i=0;i<q.length;i++){
+        const ch = q[i];
+        if(ch === '"' || ch === '«' || ch === '»'){ inQuotes = !inQuotes; continue; }
+        if(!inQuotes && /\s/.test(ch)){
+          if(cur.trim()) tokens.push(cur.trim());
+          cur = '';
+        } else cur += ch;
+      }
+      if(cur.trim()) tokens.push(cur.trim());
+      return tokens;
+    }
+    function applySmartFilter(q){
+      if(!excelRows.length) return [];
+      const tokens = parseSmartQuery(q);
+      const headerIdx = new Map(excelHeaders.map((h,i)=>[h,i]));
+      const pairs = [], free = [];
+      tokens.forEach(t=>{
+        const eq = t.indexOf('=');
+        if(eq>0){ pairs.push({key:t.slice(0,eq).trim(), val:t.slice(eq+1).trim()}); }
+        else free.push(t);
+      });
+      const matchVal = (cell,needle) => String(cell??'').toLowerCase().includes(String(needle).toLowerCase());
+      const rowsIdx = [];
+      for(let i=0;i<excelRows.length;i++){
+        const row = excelRows[i];
+        let ok = true;
+        for(const {key,val} of pairs){
+          let colIndex = headerIdx.get(key);
+          if(colIndex === undefined){
+            const target = key.toLowerCase();
+            for(let c=0;c<excelHeaders.length;c++){
+              const aliases = makeAliases(excelHeaders[c]).map(a=>a.toLowerCase());
+              if(aliases.includes(target)){ colIndex = c; break; }
+            }
+          }
+          if(colIndex === undefined || !matchVal(row[colIndex], val)){ ok = false; break; }
+        }
+        if(!ok) continue;
+        for(const word of free){
+          const hit = row.some(cell => matchVal(cell, word));
+          if(!hit){ ok = false; break; }
+        }
+        if(ok) rowsIdx.push(i);
+      }
+      return rowsIdx;
+    }
+    function populateRecordSelect(indexes){
+      const makeLabel = (i)=>{
+        const row = excelRows[i]||[];
+        const pick = (name)=> row[(excelHeaders.indexOf(name))] || "";
+        const fio = pick("Кому_ФИО") || pick("ФИО") || "";
+        const fil = pick("Филиал") || "";
+        const tu  = pick("Номер_ТУ") || pick("Номер_документа") || "";
+        const os  = pick("ОС") || "";
+        let parts = [];
+        if(fio) parts.push(fio);
+        if(fil) parts.push(fil);
+        if(os) parts.push(os);
+        if(tu) parts.push(`ТУ:${tu}`);
+        const label = parts.join(" • ") || `Строка ${i+2}`;
+        return `${label} — №${i+2}`;
+      };
+      $recordSelect.innerHTML = `<option value="">— выберите запись —</option>` + indexes.slice(0,500).map(i=>`<option value="${i}">${makeLabel(i)}</option>`).join("");
+    }
+    function refreshSmartFilter(){
+      const q = $smartQuery.value || "";
+      const idxs = applySmartFilter(q);
+      $matchInfo.textContent = `Совпадений: ${idxs.length} / всего: ${excelRows.length}`;
+      populateRecordSelect(idxs);
+      // Автовыбор одной найденной строки
+      if(idxs.length === 1){
+        $recordSelect.value = String(idxs[0]);
+        $rowNumberInput.value = idxs[0] + 2;
+      } else if(!$rowNumberInput.value){
+        $recordSelect.value = "";
+      }
+      triggerAutoGenerate();
+    }
+    $smartQuery.addEventListener('input', refreshSmartFilter);
+
+    // Синхронизация выбора записи <-> номер строки
+    $recordSelect.addEventListener('change', ()=>{
+      const v = $recordSelect.value;
+      if(v!=="" && !isNaN(+v)){ $rowNumberInput.value = (+v) + 2; }
+      triggerAutoGenerate();
     });
 
-    // Создание визуальных фильтров
-    function createVisualFilters() {
-      if (!excelHeaders.length) return;
-      
-      const container = document.getElementById('visualFiltersContainer');
-      const importantFields = ['Филиал', 'ОС', 'Кому_ФИО', 'ФИО', 'Тип_документа'];
-      const fieldsToShow = [];
-      
-      // Добавляем важные поля, если они есть
-      importantFields.forEach(field => {
-        const found = excelHeaders.find(h => 
-          h === field || h.toLowerCase() === field.toLowerCase() || 
-          normalizeKey(h) === normalizeKey(field)
-        );
-        if (found) fieldsToShow.push(found);
-      });
-      
-      // Добавляем остальные поля (максимум 6 всего)
-      excelHeaders.forEach(h => {
-        if (fieldsToShow.length < 6 && !fieldsToShow.includes(h)) {
-          fieldsToShow.push(h);
-        }
-      });
-
-      container.innerHTML = fieldsToShow.map(header => {
-        const uniqueValues = [...new Set(excelRows.map(row => {
-          const idx = excelHeaders.indexOf(header);
-          return row[idx] || '';
-        }))].filter(v => v.trim() !== '').sort().slice(0, 50); // Ограничиваем до 50 значений
-
-        return `
-          <div class="filter-group">
-            <div class="filter-label">${header}</div>
-            <select class="filter-select" data-field="${header}">
-              <option value="">Все значения</option>
-              ${uniqueValues.map(val => `<option value="${val}">${val}</option>`).join('')}
-            </select>
-          </div>
-        `;
-      }).join('');
-
-      // Добавляем обработчики
-      container.querySelectorAll('.filter-select').forEach(select => {
-        select.addEventListener('change', applyVisualFilters);
-      });
-    }
-
-    // Применение визуальных фильтров
-    function applyVisualFilters() {
-      const filters = {};
-      document.querySelectorAll('.filter-select').forEach(select => {
-        if (select.value) {
-          filters[select.dataset.field] = select.value;
-        }
-      });
-      
-      visualFilters = filters;
-      refreshSmartFilter();
-    }
-
-    // Очистка фильтров
-    document.getElementById('clearFilters').addEventListener('click', () => {
-      document.querySelectorAll('.filter-select').forEach(select => {
-        select.value = '';
-      });
-      visualFilters = {};
-      refreshSmartFilter();
-    });
-
-    // ===== ВАЛИДАЦИЯ =====
-    function validateCurrentSelection() {
-      const status = $validationStatus;
-      
-      if (!selectedTemplate) {
-        showValidationStatus('Выберите шаблон для генерации письма', 'warning');
-        return false;
-      }
-      
-      if (!excelRows.length) {
-        showValidationStatus('Нет данных для генерации', 'error');
-        return false;
-      }
-      
-      const recIdx = getSelectedRecordIndex();
-      if (recIdx === null) {
-        showValidationStatus('Выберите запись или укажите номер строки', 'warning');
-        return false;
-      }
-      
-      // Проверка пустых обязательных полей
-      const record = excelRows[recIdx];
-      const dataObject = buildDataObject(excelHeaders, record);
-      const emptyFields = currentTplTags.filter(tag => !dataObject[tag] || dataObject[tag].toString().trim() === '');
-      
-      if (emptyFields.length > 0) {
-        showValidationStatus(`Предупреждение: Пустые поля в выбранной записи: ${emptyFields.join(', ')}`, 'warning');
-        return true; // Разрешаем генерацию, но с предупреждением
-      }
-      
-      showValidationStatus('✅ Все данные готовы для генерации', 'success');
-      return true;
-    }
-
-    function showValidationStatus(message, type) {
-      $validationStatus.textContent = message;
-      $validationStatus.className = `validation-status ${type}`;
-      $validationStatus.style.display = 'block';
-    }
-
-    function hideValidationStatus() {
-      $validationStatus.style.display = 'none';
-    }
-
-    // ===== ПРЕДПРОСМОТР ДАННЫХ =====
-    function updateDataPreview() {
-      const recIdx = getSelectedRecordIndex();
-      
-      if (recIdx === null || !excelHeaders.length) {
-        $dataPreviewCard.style.display = 'none';
+    // НОВОЕ: ручной ввод номера строки
+    function selectByRowNumber(){
+      const n = parseInt($rowNumberInput.value, 10);
+      if(isNaN(n) || n < 2 || n > excelRows.length + 1){
+        setError($errorTpl, "Неверный номер строки: допустимо от 2 до " + (excelRows.length + 1));
         return;
       }
-      
-      const record = excelRows[recIdx];
-      const dataObject = buildDataObject(excelHeaders, record);
-      
-      // Показываем только поля, которые используются в шаблоне, плюс основные
-      const mainFields = ['Кому_ФИО', 'ФИО', 'Филиал', 'ОС', 'Номер_ТУ', 'Номер_документа'];
-      const fieldsToShow =
+      const idx = n - 2;
+      // если индекс есть в текущем списке результатов — выберем его в селекте
+      const opt = [...$recordSelect.options].find(o => o.value === String(idx));
+      if(opt) $recordSelect.value = String(idx);
+      else $recordSelect.value = ""; // вне фильтра — всё равно сгенерим по номеру
+      triggerAutoGenerate();
+    }
+    $rowNumberInput.addEventListener('change', selectByRowNumber);
+    $rowNumberInput.addEventListener('keyup', (e)=>{ if(e.key==='Enter') selectByRowNumber(); });
+
+    // ===== ДИАГНОСТИКА =====
+    function updateDiagnostics(){
+      const hdrAliases = new Map();
+      excelHeaders.forEach(h => makeAliases(h).forEach(a => hdrAliases.set(a,h)));
+      const missing = [];
+      const used = new Set();
+      currentTplTags.forEach(tag=>{
+        const cands = uniq([tag, tag.toLowerCase(), normalizeKey(tag), normalizeKey(tag).toLowerCase(), tag.replace(/\s+/g,'_'), tag.replace(/_/g,' ')]);
+        let matched = null;
+        for(const c of cands){ if(hdrAliases.has(c)){ matched = hdrAliases.get(c); break; } }
+        if(!matched) missing.push(tag); else used.add(matched);
+      });
+      const unused = excelHeaders.filter(h=>!used.has(h));
+      $missingInSheet.innerHTML = renderChips(missing);
+      $unusedHeaders.innerHTML = renderChips(unused);
+    }
+
+    // ===== ГЕНЕРАЦИЯ DOCX + PREVIEW (авто) =====
+    async function autoGenerate(){
+      setError($errorTpl,""); lastGeneratedBlob = null;
+      // приоритет: если задан номер строки — берём его, иначе — выбранный из списка
+      let recIdx = null;
+      if($rowNumberInput.value){
+        const n = parseInt($rowNumberInput.value,10);
+        if(!isNaN(n) && n>=2 && n<=excelRows.length+1) recIdx = n - 2;
+      }
+      if(recIdx===null && $recordSelect.value) recIdx = parseInt($recordSelect.value,10);
+
+      if(!selectedTemplate || recIdx===null || isNaN(recIdx)){ clearPreview(); return; }
+
+      try{
+        const res = await fetch(selectedTemplate.url);
+        if(!res.ok) throw new Error("Не удалось загрузить шаблон");
+        const ab = await res.arrayBuffer();
+        const zip = new PizZip(ab);
+
+        const doc = new window.docxtemplater(zip, { delimiters:{start:'[[', end:']]'} });
+        const data = buildDataObject(excelHeaders, excelRows[recIdx]);
+        doc.setData(data);
+        try{ doc.render(); }
+        catch(e){
+          let details = "";
+          if(e.properties?.errors){ details = e.properties.errors.map(err=>`• ${err.properties?.explanation || err.message || "Ошибка"}`).join("\n"); }
+          throw new Error("Ошибка формирования шаблона.\n" + details);
+        }
+
+        const out = doc.getZip().generate({ type:"blob" });
+        lastGeneratedBlob = out;
+
+        const buf = await out.arrayBuffer();
+        const result = await window.mammoth.convertToHtml({ arrayBuffer:buf });
+        $preview.innerHTML = result.value || "<i>(Превью пустое — но .docx сформирован)</i>";
+        $downloadBtn.disabled = false;
+        $copyBtn.disabled = false;
+
+        if(isMobile()){ document.querySelector('#preview').scrollIntoView({behavior:'smooth', block:'start'}); }
+      }catch(e){
+        console.error(e); setError($errorTpl, e.message || "Ошибка формирования");
+        $downloadBtn.disabled = true; $copyBtn.disabled = true;
+      }
+    }
+    function triggerAutoGenerate(){
+      clearTimeout(triggerAutoGenerate._t);
+      triggerAutoGenerate._t = setTimeout(autoGenerate, 150);
+    }
+
+    // Скачать .docx
+    function downloadDocx(){
+      if(!lastGeneratedBlob || !selectedTemplate) return;
+      const a = document.createElement("a");
+      const url = URL.createObjectURL(lastGeneratedBlob);
+      a.href = url;
+      const clean = selectedTemplate.name.replace(/\.docx$/i,'');
+      const rec = $rowNumberInput.value ? parseInt($rowNumberInput.value,10) : ($recordSelect.value ? (parseInt($recordSelect.value,10)+2) : 'X');
+      a.download = `${clean}_строка_${rec}.docx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+    document.getElementById('downloadBtn').addEventListener('click', downloadDocx);
+
+    // Скопировать письмо
+    async function copyLetter(){
+      const html = $preview.innerHTML;
+      if(!html) return;
+      try{
+        const blobHtml = new Blob([html], { type: "text/html" });
+        const blobText = new Blob([ $preview.innerText || $preview.textContent || "" ], { type: "text/plain" });
+        const data = [ new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText }) ];
+        await navigator.clipboard.write(data);
+      }catch(_){
+        const range = document.createRange();
+        range.selectNodeContents($preview);
+        const sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+        document.execCommand('copy');
+        sel.removeAllRanges();
+      }
+      const btn = document.getElementById('copyBtn');
+      const old = btn.textContent; btn.textContent = "Скопировано!";
+      setTimeout(()=> btn.textContent = old, 1200);
+    }
+    document.getElementById('copyBtn').addEventListener('click', copyLetter);
+
+    // Тумблеры спрятанных секций
+    function toggle(el){ el.classList.toggle('open'); }
+    $toggleRegistry.addEventListener('click', ()=> toggle($registryDrawer));
+    $toggleDiag.addEventListener('click', ()=> toggle($diagDrawer));
+
+    // Инициализация
+    (function init(){
+      fetchTemplatesList();
+      loadGoogleSheet(DEFAULT_GOOGLE_SHEET_ID);
+      setTimeout(()=> document.getElementById('smartQuery').focus(), 300);
+    })();
+  </script>
+</body>
+</html>
