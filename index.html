@@ -491,19 +491,111 @@
 
     /* ===== PREVIEW ===== */
     .preview-container {
-      min-height: 300px;
+      min-height: 400px;
       border: 1px solid var(--border-light);
       border-radius: var(--radius-lg);
-      background: var(--bg-primary);
+      background: #f8f9fa;
       position: relative;
       overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
     }
 
     .preview-content {
-      padding: 20px;
-      max-height: 500px;
+      background: white;
+      margin: 20px;
+      padding: 40px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-height: 600px;
       overflow-y: auto;
-      line-height: 1.6;
+      position: relative;
+      transform: scale(0.85);
+      transform-origin: top left;
+      width: 117.6%;
+      min-height: 350px;
+      
+      /* Document styling */
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #000;
+    }
+
+    .preview-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px solid #ddd;
+      border-radius: var(--radius-md);
+      pointer-events: none;
+    }
+
+    /* Document content styling */
+    .preview-content h1,
+    .preview-content h2,
+    .preview-content h3,
+    .preview-content h4,
+    .preview-content h5,
+    .preview-content h6 {
+      color: #000;
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+
+    .preview-content p {
+      margin: 0 0 12px 0;
+      text-align: justify;
+    }
+
+    .preview-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12px 0;
+    }
+
+    .preview-content table td,
+    .preview-content table th {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    .preview-content strong,
+    .preview-content b {
+      font-weight: bold;
+    }
+
+    .preview-content em,
+    .preview-content i {
+      font-style: italic;
+    }
+
+    .preview-content ul,
+    .preview-content ol {
+      margin: 12px 0;
+      padding-left: 20px;
+    }
+
+    .preview-content li {
+      margin-bottom: 6px;
+    }
+
+    /* Document header info */
+    .document-info {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: rgba(255,255,255,0.9);
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      border: 1px solid var(--border-light);
     }
 
     .preview-empty {
@@ -892,7 +984,28 @@
       }
     }
 
-    @media (max-width: 480px) {
+          @media (max-width: 768px) {
+        .preview-content {
+          transform: scale(0.75);
+          width: 133.3%;
+          margin: 15px;
+          padding: 30px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .preview-content {
+          transform: scale(0.65);
+          width: 153.8%;
+          margin: 10px;
+          padding: 25px;
+        }
+        
+        .document-info {
+          font-size: 9px;
+          padding: 3px 6px;
+        }
+      }
       .header-content {
         padding: 10px 12px;
       }
@@ -1936,7 +2049,7 @@
           <div class="preview-empty">
             <i class="fas fa-file-alt"></i>
             <h4>Выберите шаблон и настройте данные</h4>
-            <p>Письмо появится здесь после выбора шаблона и указания строки данных</p>
+            <p>Документ появится здесь в виде миниатюры как в Word</p>
           </div>
         `;
         Elements.downloadBtn.disabled = true;
@@ -2015,12 +2128,21 @@
           const output = doc.getZip().generate({ type: "blob" });
           AppState.lastGeneratedBlob = output;
           
-          // Generate preview
+          // Generate preview with document styling
           const buffer = await output.arrayBuffer();
           const result = await window.mammoth.convertToHtml({ arrayBuffer: buffer });
           
-          Elements.previewContent.innerHTML = result.value || 
-            '<div class="preview-empty"><i class="fas fa-file-alt"></i><p>Документ сформирован, но превью недоступно</p></div>';
+          const documentInfo = `
+            <div class="document-info">
+              <i class="fas fa-file-word"></i> 
+              ${AppState.selectedTemplate.displayName} • Строка ${recordIndex + 2}
+            </div>
+          `;
+          
+          const documentContent = result.value || 
+            '<p style="text-align: center; color: #666; font-style: italic;">Документ сформирован, но содержимое недоступно для предварительного просмотра</p>';
+          
+          Elements.previewContent.innerHTML = documentInfo + documentContent;
           
           Elements.downloadBtn.disabled = false;
           Elements.copyBtn.disabled = false;
