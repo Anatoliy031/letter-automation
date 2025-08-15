@@ -364,12 +364,22 @@
     }
 
     /* ===== FILTERS ===== */
-    .filters-grid {
+    .filters-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .smart-search-section {
+      width: 100%;
+    }
+
+    .selection-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr auto;
+      grid-template-columns: 2fr 1fr;
       gap: 16px;
       align-items: end;
-      margin-bottom: 20px;
     }
 
     .input-group {
@@ -864,7 +874,7 @@
         padding: 20px 16px;
       }
       
-      .filters-grid {
+      .selection-grid {
         grid-template-columns: 1fr;
         gap: 12px;
       }
@@ -1057,36 +1067,41 @@
           </h2>
         </div>
         <div class="section-content">
-          <div class="filters-grid">
-            <div class="input-group">
-              <label class="input-label">Умный поиск</label>
-              <input 
-                type="text" 
-                class="form-input" 
-                id="smartQuery" 
-                placeholder="Пример: Филиал=Тихорецкие ОС=Ростелеком &quot;Номер_ТУ=123&quot; или просто текст для общего поиска"
-              >
-            </div>
-            <div class="input-group">
-              <label class="input-label">Выбор записи</label>
-              <select class="form-select" id="recordSelect">
-                <option value="">— выберите запись —</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label class="input-label">Номер строки</label>
-              <div style="display: flex; gap: 8px;">
+          <div class="filters-container">
+            <div class="smart-search-section">
+              <div class="input-group">
+                <label class="input-label">Умный поиск</label>
                 <input 
-                  type="number" 
+                  type="text" 
                   class="form-input" 
-                  id="rowNumberInput" 
-                  min="2" 
-                  placeholder="№ строки"
-                  style="width: 100px;"
+                  id="smartQuery" 
+                  placeholder="Пример: Филиал=Тихорецкие ОС=Ростелеком &quot;Номер_ТУ=123&quot; или просто текст для общего поиска"
                 >
-                <button class="refresh-btn" id="refreshData" title="Обновить данные">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
+              </div>
+            </div>
+            
+            <div class="selection-grid">
+              <div class="input-group">
+                <label class="input-label">Выбор записи</label>
+                <select class="form-select" id="recordSelect">
+                  <option value="">— выберите запись —</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label class="input-label">Номер строки</label>
+                <div style="display: flex; gap: 8px;">
+                  <input 
+                    type="number" 
+                    class="form-input" 
+                    id="rowNumberInput" 
+                    min="2" 
+                    placeholder="№ строки"
+                    style="width: 100px;"
+                  >
+                  <button class="refresh-btn" id="refreshData" title="Обновить данные">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2207,4 +2222,3 @@
   </script>
 </body>
 </html>
-        
