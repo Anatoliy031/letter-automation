@@ -375,11 +375,25 @@
       width: 100%;
     }
 
-    .selection-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
+    .selection-section {
+      display: flex;
+      flex-direction: column;
       gap: 16px;
+      width: 100%;
+    }
+
+    .row-number-section {
+      display: flex;
+      gap: 12px;
       align-items: end;
+    }
+
+    .row-number-section .input-group {
+      flex: 1;
+    }
+
+    .refresh-text {
+      display: none;
     }
 
     .input-group {
@@ -966,9 +980,23 @@
         padding: 20px 16px;
       }
       
-      .selection-grid {
-        grid-template-columns: 1fr;
+      .selection-section {
         gap: 12px;
+      }
+      
+      .row-number-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      
+      .refresh-btn {
+        align-self: stretch;
+        justify-content: center;
+      }
+      
+      .refresh-text {
+        display: inline;
       }
       
       .diagnostics-grid {
@@ -1193,28 +1221,28 @@
               </div>
             </div>
             
-            <div class="selection-grid">
+            <div class="selection-section">
               <div class="input-group">
                 <label class="input-label">Выбор записи</label>
                 <select class="form-select" id="recordSelect">
                   <option value="">— выберите запись —</option>
                 </select>
               </div>
-              <div class="input-group">
-                <label class="input-label">Номер строки</label>
-                <div style="display: flex; gap: 8px;">
+              <div class="row-number-section">
+                <div class="input-group">
+                  <label class="input-label">Номер строки</label>
                   <input 
                     type="number" 
                     class="form-input" 
                     id="rowNumberInput" 
                     min="2" 
-                    placeholder="№ строки"
-                    style="width: 100px;"
+                    placeholder="№ строки (например: 5)"
                   >
-                  <button class="refresh-btn" id="refreshData" title="Обновить данные">
-                    <i class="fas fa-sync-alt"></i>
-                  </button>
                 </div>
+                <button class="refresh-btn" id="refreshData" title="Обновить данные">
+                  <i class="fas fa-sync-alt"></i>
+                  <span class="refresh-text">Обновить</span>
+                </button>
               </div>
             </div>
           </div>
