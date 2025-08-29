@@ -2,12 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>✨ Система автоматизации писем — Pro версия</title>
+  <title>Система автоматизации писем</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Современные шрифты -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Шрифты -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <!-- Иконки -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -17,21 +17,14 @@
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.38.0/build/docxtemplater.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
       --primary: #6366f1;
       --primary-dark: #4f46e5;
       --primary-light: #e0e7ff;
-      --primary-rgb: 99, 102, 241;
-      
       --secondary: #10b981;
-      --secondary-rgb: 16, 185, 129;
-      
       --accent: #f59e0b;
-      --accent-rgb: 245, 158, 11;
-      
       --danger: #ef4444;
       --warning: #f59e0b;
       --success: #10b981;
@@ -40,7 +33,7 @@
       --bg-primary: #ffffff;
       --bg-secondary: #f8fafc;
       --bg-tertiary: #f1f5f9;
-      --bg-dark: #0f172a;
+      --bg-card: #ffffff;
       
       --text-primary: #0f172a;
       --text-secondary: #475569;
@@ -54,21 +47,19 @@
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
       --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-      --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
       
       --radius: 0.75rem;
       --radius-lg: 1rem;
       --radius-xl: 1.5rem;
       
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     [data-theme="dark"] {
-      --bg-primary: #0f172a;
-      --bg-secondary: #1e293b;
+      --bg-primary: #1e293b;
+      --bg-secondary: #0f172a;
       --bg-tertiary: #334155;
-      --bg-dark: #020617;
+      --bg-card: #1e293b;
       
       --text-primary: #f1f5f9;
       --text-secondary: #cbd5e1;
@@ -84,7 +75,7 @@
     }
 
     html {
-      scroll-behavior: smooth;
+      height: 100%;
     }
 
     body {
@@ -94,10 +85,11 @@
       color: var(--text-primary);
       line-height: 1.6;
       font-size: 14px;
-      transition: background 0.3s ease;
+      min-height: 100%;
+      transition: background 0.3s;
     }
 
-    /* Фоновая анимация */
+    /* Фон с градиентом */
     body::before {
       content: '';
       position: fixed;
@@ -106,46 +98,21 @@
       width: 100%;
       height: 100%;
       background: 
-        radial-gradient(circle at 20% 80%, rgba(var(--primary-rgb), 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(var(--secondary-rgb), 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb), 0.03) 0%, transparent 50%);
+        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
       pointer-events: none;
       z-index: -1;
     }
 
-    /* ===== SCROLLBAR ===== */
-    ::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: var(--bg-tertiary);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--border-medium);
-      border-radius: 5px;
-      transition: var(--transition);
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--text-light);
-    }
-
-    /* ===== HEADER ===== */
+    /* Header */
     .header {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(20px) saturate(180%);
+      background: var(--bg-primary);
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border-light);
-      transition: var(--transition);
-    }
-
-    [data-theme="dark"] .header {
-      background: rgba(15, 23, 42, 0.8);
+      box-shadow: var(--shadow-sm);
     }
 
     .header-content {
@@ -167,19 +134,18 @@
       display: none;
       width: 40px;
       height: 40px;
+      background: var(--bg-tertiary);
       border: none;
-      background: var(--bg-primary);
       border-radius: var(--radius);
       cursor: pointer;
       transition: var(--transition);
       color: var(--text-secondary);
-      box-shadow: var(--shadow-sm);
     }
 
     .menu-btn:hover {
+      background: var(--primary);
+      color: white;
       transform: scale(1.05);
-      box-shadow: var(--shadow-md);
-      color: var(--primary);
     }
 
     .logo {
@@ -190,11 +156,6 @@
       color: var(--text-primary);
       font-weight: 700;
       font-size: 1.125rem;
-      transition: var(--transition);
-    }
-
-    .logo:hover {
-      transform: translateX(5px);
     }
 
     .logo-icon {
@@ -208,12 +169,6 @@
       color: white;
       font-size: 1.25rem;
       box-shadow: var(--shadow-md);
-      transition: var(--transition);
-    }
-
-    .logo:hover .logo-icon {
-      transform: rotate(10deg) scale(1.1);
-      box-shadow: var(--shadow-lg);
     }
 
     .header-actions {
@@ -225,13 +180,12 @@
     .theme-toggle {
       width: 40px;
       height: 40px;
+      background: var(--bg-tertiary);
       border: none;
-      background: var(--bg-primary);
       border-radius: var(--radius);
       cursor: pointer;
       transition: var(--transition);
       color: var(--text-secondary);
-      box-shadow: var(--shadow-sm);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -239,9 +193,8 @@
     }
 
     .theme-toggle:hover {
-      transform: scale(1.05);
-      box-shadow: var(--shadow-md);
-      color: var(--primary);
+      background: var(--primary);
+      color: white;
     }
 
     .status-badge {
@@ -249,17 +202,10 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 1rem;
-      background: var(--bg-primary);
+      background: var(--bg-tertiary);
       border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-sm);
       font-size: 0.875rem;
       font-weight: 500;
-      transition: var(--transition);
-    }
-
-    .status-badge:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
     }
 
     .status-dot {
@@ -267,22 +213,15 @@
       height: 8px;
       background: var(--success);
       border-radius: 50%;
-      box-shadow: 0 0 0 2px rgba(var(--secondary-rgb), 0.2);
       animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { 
-        opacity: 1;
-        transform: scale(1);
-      }
-      50% { 
-        opacity: 0.7;
-        transform: scale(1.2);
-      }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
 
-    /* ===== LAYOUT ===== */
+    /* Layout */
     .app-container {
       display: flex;
       min-height: calc(100vh - 65px);
@@ -290,22 +229,17 @@
       margin: 0 auto;
     }
 
-    /* ===== SIDEBAR ===== */
+    /* Sidebar */
     .sidebar {
       width: 320px;
       background: var(--bg-primary);
       border-right: 1px solid var(--border-light);
       overflow-y: auto;
-      transition: var(--transition);
       flex-shrink: 0;
     }
 
     .sidebar-content {
       padding: 1.5rem;
-    }
-
-    .sidebar-header {
-      margin-bottom: 1.5rem;
     }
 
     .sidebar-title {
@@ -318,27 +252,21 @@
       color: var(--text-primary);
     }
 
-    .sidebar-title i {
-      color: var(--primary);
-    }
-
     .sidebar-subtitle {
       font-size: 0.875rem;
       color: var(--text-muted);
-      line-height: 1.5;
+      margin-bottom: 1.5rem;
     }
 
-    .tag-example {
+    .tag-hint {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
       background: var(--bg-tertiary);
       padding: 0.25rem 0.5rem;
       border-radius: var(--radius);
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.75rem;
       color: var(--primary);
-      font-weight: 500;
       margin-top: 0.5rem;
     }
 
@@ -361,8 +289,7 @@
     .search-input:focus {
       outline: none;
       border-color: var(--primary);
-      background: var(--bg-primary);
-      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+      background: var(--bg-card);
     }
 
     .search-icon {
@@ -371,29 +298,16 @@
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-muted);
-      font-size: 0.875rem;
-    }
-
-    .template-stats {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      padding: 0.75rem 1rem;
-      background: var(--bg-tertiary);
-      border-radius: var(--radius);
-      font-size: 0.75rem;
-      color: var(--text-muted);
     }
 
     .templates-grid {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.75rem;
     }
 
     .template-card {
-      background: var(--bg-secondary);
+      background: var(--bg-tertiary);
       border: 2px solid transparent;
       border-radius: var(--radius);
       padding: 1rem;
@@ -418,7 +332,6 @@
     .template-card:hover {
       border-color: var(--primary);
       transform: translateX(5px);
-      box-shadow: var(--shadow-md);
     }
 
     .template-card:hover::before {
@@ -428,48 +341,26 @@
     .template-card.active {
       background: var(--primary-light);
       border-color: var(--primary);
-      box-shadow: var(--shadow-md);
     }
 
     .template-card.active::before {
       transform: scaleY(1);
     }
 
-    .template-icon {
-      width: 32px;
-      height: 32px;
-      background: var(--bg-primary);
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 0.75rem;
-      color: var(--primary);
-      font-size: 1rem;
-      box-shadow: var(--shadow-sm);
-    }
-
     .template-name {
       font-weight: 600;
       margin-bottom: 0.25rem;
-      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .template-meta {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
       font-size: 0.75rem;
       color: var(--text-muted);
     }
 
-    .template-meta span {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    /* ===== MAIN CONTENT ===== */
+    /* Main Content */
     .main-content {
       flex: 1;
       padding: 2rem;
@@ -484,10 +375,7 @@
       font-size: 1.875rem;
       font-weight: 800;
       margin: 0 0 0.5rem 0;
-      background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: var(--text-primary);
     }
 
     .page-description {
@@ -495,7 +383,7 @@
       font-size: 1rem;
     }
 
-    /* ===== STATS CARDS ===== */
+    /* Stats */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -504,75 +392,43 @@
     }
 
     .stat-card {
-      background: var(--bg-primary);
+      background: var(--bg-card);
       border-radius: var(--radius-lg);
-      padding: 1.25rem;
+      padding: 1.5rem;
       box-shadow: var(--shadow-sm);
       transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .stat-card::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, rgba(var(--primary-rgb), 0.1) 0%, transparent 70%);
-      transform: scale(2);
+      border: 1px solid var(--border-light);
     }
 
     .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .stat-card-content {
-      position: relative;
-      z-index: 1;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
 
     .stat-label {
       font-size: 0.875rem;
       color: var(--text-muted);
       margin-bottom: 0.5rem;
-      font-weight: 500;
     }
 
     .stat-value {
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--text-primary);
-      line-height: 1;
-    }
-
-    .stat-icon {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 1.5rem;
       color: var(--primary);
-      opacity: 0.2;
     }
 
-    /* ===== SECTIONS ===== */
+    /* Sections */
     .section {
-      background: var(--bg-primary);
+      background: var(--bg-card);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
       margin-bottom: 1.5rem;
       overflow: hidden;
-      transition: var(--transition);
-    }
-
-    .section:hover {
-      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-light);
     }
 
     .section-header {
-      padding: 1.25rem 1.5rem;
+      padding: 1.5rem;
       border-bottom: 1px solid var(--border-light);
       display: flex;
       align-items: center;
@@ -586,24 +442,17 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      color: var(--text-primary);
     }
 
     .section-title i {
       color: var(--primary);
-      font-size: 1.25rem;
-    }
-
-    .section-actions {
-      display: flex;
-      gap: 0.5rem;
     }
 
     .section-content {
       padding: 1.5rem;
     }
 
-    /* ===== FORMS ===== */
+    /* Forms */
     .form-grid {
       display: grid;
       gap: 1.25rem;
@@ -619,21 +468,12 @@
       font-size: 0.875rem;
       font-weight: 600;
       color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .form-label .tooltip {
-      color: var(--text-muted);
-      cursor: help;
-      font-size: 0.75rem;
     }
 
     .form-input,
     .form-select {
       padding: 0.875rem 1rem;
-      background: var(--bg-secondary);
+      background: var(--bg-tertiary);
       border: 2px solid var(--border-light);
       border-radius: var(--radius);
       font-size: 0.875rem;
@@ -646,14 +486,7 @@
     .form-select:focus {
       outline: none;
       border-color: var(--primary);
-      background: var(--bg-primary);
-      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
-    }
-
-    .form-hint {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
+      background: var(--bg-card);
     }
 
     .input-with-action {
@@ -666,7 +499,7 @@
       flex: 1;
     }
 
-    /* ===== BUTTONS ===== */
+    /* Buttons */
     .btn {
       padding: 0.75rem 1.25rem;
       border: none;
@@ -678,38 +511,21 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      position: relative;
-      overflow: hidden;
       font-family: inherit;
     }
 
-    .btn::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      transition: width 0.6s, height 0.6s;
-    }
-
-    .btn:active::before {
-      width: 300px;
-      height: 300px;
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      background: var(--primary);
       color: white;
-      box-shadow: var(--shadow-md);
     }
 
     .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
+      background: var(--primary-dark);
+      box-shadow: var(--shadow-md);
     }
 
     .btn-secondary {
@@ -719,55 +535,38 @@
 
     .btn-secondary:hover:not(:disabled) {
       background: var(--bg-secondary);
-      transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
 
     .btn-success {
-      background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+      background: var(--success);
       color: white;
-      box-shadow: var(--shadow-md);
     }
 
     .btn-success:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .btn-danger {
-      background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
-      color: white;
+      background: #059669;
       box-shadow: var(--shadow-md);
-    }
-
-    .btn-icon {
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      justify-content: center;
     }
 
     .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-      transform: none !important;
-      box-shadow: none !important;
     }
 
     .btn.loading {
+      position: relative;
       color: transparent;
-      pointer-events: none;
     }
 
     .btn.loading::after {
       content: '';
       position: absolute;
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
       top: 50%;
       left: 50%;
-      margin-left: -10px;
-      margin-top: -10px;
+      margin-left: -8px;
+      margin-top: -8px;
       border: 2px solid white;
       border-radius: 50%;
       border-top-color: transparent;
@@ -778,95 +577,27 @@
       to { transform: rotate(360deg); }
     }
 
-    /* ===== PREVIEW ===== */
+    /* Preview */
     .preview-container {
-      background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      min-height: 500px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .preview-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      padding: 0.75rem 1rem;
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(10px);
+      background: #f8f9fa;
       border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .preview-zoom {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-    }
-
-    .zoom-slider {
-      width: 100px;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 4px;
-      background: var(--bg-tertiary);
-      border-radius: 2px;
-      outline: none;
-    }
-
-    .zoom-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      background: var(--primary);
-      border-radius: 50%;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .zoom-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-      box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.2);
+      padding: 1.5rem;
+      min-height: 400px;
+      position: relative;
     }
 
     .preview-document {
       background: white;
       border-radius: var(--radius);
-      box-shadow: 
-        0 0 0 1px rgba(0, 0, 0, 0.05),
-        0 10px 15px -3px rgba(0, 0, 0, 0.1),
-        0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      padding: 3rem;
+      box-shadow: var(--shadow-md);
+      padding: 2.5rem;
       margin: 0 auto;
       max-width: 800px;
-      min-height: 400px;
+      min-height: 350px;
       font-family: 'Times New Roman', serif;
       font-size: 14px;
-      line-height: 1.8;
+      line-height: 1.6;
       color: #000;
-      position: relative;
-      transform-origin: top center;
-      transition: transform 0.2s ease;
-    }
-
-    .preview-watermark {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: var(--bg-tertiary);
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius);
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-family: 'Inter', sans-serif;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
     }
 
     .preview-empty {
@@ -879,68 +610,55 @@
       color: var(--text-muted);
     }
 
-    .preview-empty-icon {
-      width: 64px;
-      height: 64px;
-      background: var(--bg-tertiary);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
+    .preview-empty i {
+      font-size: 3rem;
+      opacity: 0.5;
       margin-bottom: 1rem;
-      color: var(--text-light);
     }
 
-    /* ===== ACTIONS BAR ===== */
+    /* Actions */
     .actions-bar {
       display: flex;
       gap: 0.75rem;
       margin-top: 1.5rem;
       flex-wrap: wrap;
-      padding: 1.25rem;
-      background: var(--bg-tertiary);
-      border-radius: var(--radius-lg);
-      align-items: center;
-      justify-content: space-between;
     }
 
-    .actions-group {
+    /* Tags display */
+    .tags-container {
       display: flex;
-      gap: 0.75rem;
       flex-wrap: wrap;
+      gap: 0.5rem;
+      min-height: 2rem;
     }
 
-    /* ===== CHIPS ===== */
-    .chip {
+    .tag {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
       padding: 0.25rem 0.75rem;
       background: var(--bg-tertiary);
       border-radius: var(--radius-xl);
       font-size: 0.75rem;
       font-weight: 500;
       font-family: 'JetBrains Mono', monospace;
-      transition: var(--transition);
     }
 
-    .chip-success {
-      background: rgba(var(--secondary-rgb), 0.1);
+    .tag-success {
+      background: rgba(16, 185, 129, 0.1);
       color: var(--success);
     }
 
-    .chip-warning {
-      background: rgba(var(--accent-rgb), 0.1);
+    .tag-warning {
+      background: rgba(245, 158, 11, 0.1);
       color: var(--warning);
     }
 
-    .chip-danger {
+    .tag-danger {
       background: rgba(239, 68, 68, 0.1);
       color: var(--danger);
     }
 
-    /* ===== TABLE ===== */
+    /* Table */
     .table-wrapper {
       overflow-x: auto;
       border-radius: var(--radius);
@@ -955,47 +673,39 @@
 
     .data-table th {
       background: var(--bg-tertiary);
-      padding: 0.875rem 1rem;
+      padding: 0.75rem;
       text-align: left;
       font-weight: 600;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 0.875rem;
       color: var(--text-secondary);
       border-bottom: 1px solid var(--border-light);
       position: sticky;
       top: 0;
-      z-index: 10;
     }
 
     .data-table td {
-      padding: 0.75rem 1rem;
+      padding: 0.75rem;
       border-bottom: 1px solid var(--border-light);
       font-size: 0.875rem;
-      color: var(--text-secondary);
     }
 
     .data-table tr:hover {
       background: var(--bg-tertiary);
-    }
-
-    .data-table tr {
       cursor: pointer;
-      transition: var(--transition);
     }
 
-    /* ===== NOTIFICATIONS ===== */
+    /* Notifications */
     .notification {
       position: fixed;
-      top: 1.5rem;
+      bottom: 1.5rem;
       right: -400px;
       max-width: 400px;
-      background: var(--bg-primary);
+      background: var(--bg-card);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-2xl);
+      box-shadow: var(--shadow-xl);
       padding: 1rem 1.5rem;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 1rem;
       transition: var(--transition);
       z-index: 1000;
@@ -1007,190 +717,32 @@
     }
 
     .notification-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
       font-size: 1.25rem;
+    }
+
+    .notification-success {
+      border-left: 4px solid var(--success);
     }
 
     .notification-success .notification-icon {
-      background: rgba(var(--secondary-rgb), 0.1);
       color: var(--success);
     }
 
+    .notification-error {
+      border-left: 4px solid var(--danger);
+    }
+
     .notification-error .notification-icon {
-      background: rgba(239, 68, 68, 0.1);
       color: var(--danger);
     }
 
-    .notification-warning .notification-icon {
-      background: rgba(var(--accent-rgb), 0.1);
-      color: var(--warning);
-    }
-
-    .notification-content {
-      flex: 1;
-    }
-
-    .notification-title {
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      color: var(--text-primary);
-    }
-
-    .notification-message {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-    }
-
-    /* ===== PROGRESS BAR ===== */
-    .progress-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--bg-tertiary);
-      z-index: 1001;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .progress-bar.active {
-      opacity: 1;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    /* ===== MODAL ===== */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      opacity: 0;
-      visibility: hidden;
-      transition: var(--transition);
-    }
-
-    .modal-overlay.show {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .modal {
-      background: var(--bg-primary);
-      border-radius: var(--radius-lg);
-      width: 90%;
-      max-width: 600px;
-      max-height: 90vh;
-      overflow: hidden;
-      transform: scale(0.9) translateY(20px);
-      transition: var(--transition);
-      box-shadow: var(--shadow-2xl);
-    }
-
-    .modal-overlay.show .modal {
-      transform: scale(1) translateY(0);
-    }
-
-    .modal-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--border-light);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .modal-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin: 0;
-      color: var(--text-primary);
-    }
-
-    .modal-close {
-      width: 32px;
-      height: 32px;
-      border: none;
-      background: var(--bg-tertiary);
-      border-radius: var(--radius);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-secondary);
-      transition: var(--transition);
-    }
-
-    .modal-close:hover {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-    }
-
-    .modal-content {
-      padding: 1.5rem;
-      overflow-y: auto;
-      max-height: calc(90vh - 140px);
-    }
-
-    /* ===== DIAGNOSTICS ===== */
-    .diagnostics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-    }
-
-    .diagnostic-card {
-      background: var(--bg-secondary);
-      border-radius: var(--radius);
-      padding: 1.25rem;
-      border: 1px solid var(--border-light);
-    }
-
-    .diagnostic-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.75rem;
-    }
-
-    .diagnostic-content {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    /* ===== MOBILE SIDEBAR ===== */
+    /* Mobile */
     .mobile-overlay {
+      display: none;
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
       z-index: 200;
-      opacity: 0;
-      visibility: hidden;
-      transition: var(--transition);
-    }
-
-    .mobile-overlay.show {
-      opacity: 1;
-      visibility: visible;
     }
 
     .mobile-sidebar {
@@ -1204,66 +756,14 @@
       transition: var(--transition);
       z-index: 201;
       overflow-y: auto;
-      box-shadow: var(--shadow-2xl);
+      box-shadow: var(--shadow-xl);
     }
 
     .mobile-sidebar.open {
       left: 0;
     }
 
-    /* ===== KEYBOARD SHORTCUTS ===== */
-    .shortcuts-hint {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      background: var(--bg-primary);
-      border-radius: var(--radius-lg);
-      padding: 0.75rem 1rem;
-      box-shadow: var(--shadow-lg);
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: var(--transition);
-      cursor: pointer;
-    }
-
-    .shortcuts-hint:hover {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .kbd {
-      background: var(--bg-tertiary);
-      padding: 0.125rem 0.375rem;
-      border-radius: 0.25rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      border: 1px solid var(--border-light);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    /* ===== ANALYTICS CHART ===== */
-    .chart-container {
-      position: relative;
-      height: 300px;
-      margin-top: 1rem;
-    }
-
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 1024px) {
-      .sidebar {
-        width: 280px;
-      }
-      
-      .stats-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
+    /* Responsive */
     @media (max-width: 768px) {
       .app-container {
         display: block;
@@ -1277,75 +777,64 @@
         display: flex;
       }
       
+      .mobile-overlay {
+        display: block;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+      }
+      
+      .mobile-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
+      
       .main-content {
         padding: 1rem;
       }
       
       .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
       }
       
       .actions-bar {
         flex-direction: column;
-        gap: 1rem;
-      }
-      
-      .actions-group {
-        width: 100%;
-        justify-content: center;
       }
       
       .btn {
-        flex: 1;
+        width: 100%;
         justify-content: center;
       }
       
-      .preview-document {
-        padding: 2rem;
-        transform: scale(0.9);
-      }
-    }
-
-    /* ===== LOADING ANIMATION ===== */
-    .skeleton {
-      background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
-      background-size: 200% 100%;
-      animation: loading 1.5s infinite;
-    }
-
-    @keyframes loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    /* ===== ПЕЧАТЬ ===== */
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      
-      .preview-document, .preview-document * {
-        visibility: visible;
+      .input-with-action {
+        flex-direction: column;
       }
       
       .preview-document {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        transform: none !important;
-        box-shadow: none !important;
-        border: none !important;
+        padding: 1.5rem;
       }
+    }
+
+    /* Utility */
+    .hidden {
+      display: none !important;
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <!-- Progress Bar -->
-  <div class="progress-bar" id="progressBar">
-    <div class="progress-bar-fill" id="progressFill"></div>
-  </div>
-
   <!-- Header -->
   <header class="header">
     <div class="header-content">
@@ -1367,7 +856,7 @@
         </button>
         <div class="status-badge">
           <div class="status-dot"></div>
-          <span id="statusText">Готов к работе</span>
+          <span>Готов к работе</span>
         </div>
       </div>
     </div>
@@ -1379,14 +868,13 @@
   <!-- Mobile Sidebar -->
   <aside class="mobile-sidebar" id="mobileSidebar">
     <div class="sidebar-content">
-      <div class="sidebar-header">
-        <h2 class="sidebar-title">
-          <i class="fas fa-file-word"></i>
-          Шаблоны документов
-        </h2>
-        <p class="sidebar-subtitle">
-          Выберите шаблон для создания документа
-        </p>
+      <h2 class="sidebar-title">
+        <i class="fas fa-file-word"></i>
+        Шаблоны
+      </h2>
+      <div class="sidebar-subtitle">
+        Выберите шаблон для создания документа
+        <div class="tag-hint">[[Название_поля]]</div>
       </div>
       
       <div class="search-box">
@@ -1401,20 +889,15 @@
   <!-- Main App -->
   <div class="app-container">
     <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar">
       <div class="sidebar-content">
-        <div class="sidebar-header">
-          <h2 class="sidebar-title">
-            <i class="fas fa-layer-group"></i>
-            Библиотека шаблонов
-          </h2>
-          <p class="sidebar-subtitle">
-            Используйте теги в документах для автоматической подстановки данных
-          </p>
-          <div class="tag-example">
-            <i class="fas fa-tag"></i>
-            [[Название_поля]]
-          </div>
+        <h2 class="sidebar-title">
+          <i class="fas fa-file-word"></i>
+          Библиотека шаблонов
+        </h2>
+        <div class="sidebar-subtitle">
+          Используйте теги в документах для автоматической подстановки
+          <div class="tag-hint">[[Название_поля]]</div>
         </div>
         
         <div class="search-box">
@@ -1422,56 +905,35 @@
           <input type="text" class="search-input" id="templateSearch" placeholder="Найти шаблон...">
         </div>
         
-        <div class="template-stats">
-          <span>Всего шаблонов: <strong id="templateCount">0</strong></span>
-          <span>Использовано сегодня: <strong id="usedToday">0</strong></span>
-        </div>
-        
-        <div class="templates-grid" id="templatesList">
-          <div class="template-card skeleton" style="height: 120px;"></div>
-          <div class="template-card skeleton" style="height: 120px;"></div>
-          <div class="template-card skeleton" style="height: 120px;"></div>
-        </div>
+        <div class="templates-grid" id="templatesList"></div>
       </div>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
-      <!-- Content Header -->
+      <!-- Page Header -->
       <div class="content-header">
         <h1 class="page-title">Создание документов</h1>
-        <p class="page-description">Автоматическая генерация писем и документов из шаблонов</p>
+        <p class="page-description">Автоматическая генерация писем из шаблонов</p>
       </div>
 
       <!-- Statistics -->
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-card-content">
-            <div class="stat-label">Документов сегодня</div>
-            <div class="stat-value" id="todayCount">0</div>
-          </div>
-          <i class="fas fa-file-alt stat-icon"></i>
+          <div class="stat-label">Документов сегодня</div>
+          <div class="stat-value" id="todayCount">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-content">
-            <div class="stat-label">Всего строк данных</div>
-            <div class="stat-value" id="totalRows">0</div>
-          </div>
-          <i class="fas fa-database stat-icon"></i>
+          <div class="stat-label">Всего строк</div>
+          <div class="stat-value" id="totalRows">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-content">
-            <div class="stat-label">Активный шаблон</div>
-            <div class="stat-value" id="activeTemplate">—</div>
-          </div>
-          <i class="fas fa-file-word stat-icon"></i>
+          <div class="stat-label">Активный шаблон</div>
+          <div class="stat-value" id="activeTemplate">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-content">
-            <div class="stat-label">Время генерации</div>
-            <div class="stat-value" id="genTime">— мс</div>
-          </div>
-          <i class="fas fa-tachometer-alt stat-icon"></i>
+          <div class="stat-label">Время генерации</div>
+          <div class="stat-value" id="genTime">— мс</div>
         </div>
       </div>
 
@@ -1482,63 +944,51 @@
             <i class="fas fa-sliders-h"></i>
             Настройка данных
           </h3>
-          <div class="section-actions">
-            <button class="btn btn-icon btn-secondary" id="refreshBtn" title="Обновить данные">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-          </div>
+          <button class="btn btn-secondary" id="refreshBtn">
+            <i class="fas fa-sync-alt"></i>
+            Обновить
+          </button>
         </div>
         
         <div class="section-content">
           <div class="form-grid">
-            <!-- Smart Search -->
             <div class="form-group">
-              <label class="form-label">
-                Умный поиск
-                <i class="fas fa-info-circle tooltip" title="Используйте формат: Поле=Значение или просто текст для общего поиска"></i>
-              </label>
+              <label class="form-label">Умный поиск</label>
               <input 
                 type="text" 
                 class="form-input" 
                 id="smartQuery" 
-                placeholder='Например: Филиал=Москва ОС=МТС "Номер_ТУ=123" или просто текст'
+                placeholder='Пример: Филиал=Москва ОС=МТС "Номер_ТУ=123"'
               >
-              <div class="form-hint">Поддерживается поиск по нескольким критериям через пробел</div>
             </div>
 
-            <!-- Record Selection -->
             <div class="input-with-action">
               <div class="form-group">
                 <label class="form-label">Выбор записи</label>
                 <select class="form-select" id="recordSelect">
-                  <option value="">— Выберите запись из списка —</option>
+                  <option value="">— Выберите запись —</option>
                 </select>
               </div>
               
-              <div class="form-group" style="width: 150px;">
+              <div class="form-group">
                 <label class="form-label">Строка №</label>
                 <input 
                   type="number" 
                   class="form-input" 
                   id="rowNumberInput" 
-                  min="2" 
-                  placeholder="2"
+                  min="2"
                 >
               </div>
             </div>
           </div>
           
-          <!-- Filter Info -->
-          <div style="display: flex; gap: 1rem; margin-top: 1rem; align-items: center; flex-wrap: wrap;">
-            <div class="chip chip-success">
-              <i class="fas fa-check-circle"></i>
-              Найдено: <strong id="matchCount">0</strong>
-            </div>
-            <a href="#" style="color: var(--primary); text-decoration: none; font-weight: 500;" onclick="toggleSection('registrySection'); return false;">
-              <i class="fas fa-table"></i> Просмотр данных
+          <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+            <span class="tag tag-success" id="matchCount">Найдено: 0</span>
+            <a href="#" style="color: var(--primary); font-weight: 500;" onclick="toggleSection('registrySection'); return false;">
+              Показать данные
             </a>
-            <a href="#" style="color: var(--primary); text-decoration: none; font-weight: 500;" onclick="toggleSection('diagnosticsSection'); return false;">
-              <i class="fas fa-heartbeat"></i> Диагностика
+            <a href="#" style="color: var(--primary); font-weight: 500;" onclick="toggleSection('diagnosticsSection'); return false;">
+              Диагностика
             </a>
           </div>
         </div>
@@ -1551,149 +1001,102 @@
             <i class="fas fa-eye"></i>
             Предварительный просмотр
           </h3>
-          <div class="section-actions">
-            <button class="btn btn-icon btn-secondary" onclick="window.print()" title="Печать">
-              <i class="fas fa-print"></i>
-            </button>
-          </div>
         </div>
         
         <div class="section-content">
           <div class="preview-container">
-            <div class="preview-toolbar">
-              <div class="preview-zoom">
-                <span>Масштаб:</span>
-                <input type="range" class="zoom-slider" id="zoomSlider" min="50" max="150" value="100">
-                <span id="zoomValue">100%</span>
-              </div>
-              <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-icon btn-secondary" onclick="changeZoom(-10)" title="Уменьшить">
-                  <i class="fas fa-minus"></i>
-                </button>
-                <button class="btn btn-icon btn-secondary" onclick="changeZoom(10)" title="Увеличить">
-                  <i class="fas fa-plus"></i>
-                </button>
-                <button class="btn btn-icon btn-secondary" onclick="resetZoom()" title="Сбросить">
-                  <i class="fas fa-compress"></i>
-                </button>
-              </div>
-            </div>
-            
-            <div class="preview-document" id="previewDocument">
-              <div class="preview-watermark">
-                <i class="fas fa-file-word"></i>
-                <span>Предпросмотр</span>
-              </div>
+            <div class="preview-document" id="previewContent">
               <div class="preview-empty">
-                <div class="preview-empty-icon">
-                  <i class="fas fa-file-alt"></i>
-                </div>
+                <i class="fas fa-file-alt"></i>
                 <h4>Документ появится здесь</h4>
                 <p>Выберите шаблон и укажите данные для генерации</p>
               </div>
             </div>
           </div>
           
+          <div id="errorMessage"></div>
+          
           <div class="actions-bar">
-            <div class="actions-group">
-              <button class="btn btn-primary" id="downloadBtn" disabled>
-                <i class="fas fa-download"></i>
-                Скачать .docx
-              </button>
-              <button class="btn btn-success" id="copyBtn" disabled>
-                <i class="fas fa-copy"></i>
-                Копировать
-              </button>
-              <button class="btn btn-secondary" id="regenerateBtn" disabled>
-                <i class="fas fa-redo"></i>
-                Обновить
-              </button>
-            </div>
-            
-            <div class="actions-group">
-              <button class="btn btn-secondary" onclick="showShortcuts()">
-                <i class="fas fa-keyboard"></i>
-                <span class="hide-mobile">Горячие клавиши</span>
-              </button>
-            </div>
+            <button class="btn btn-primary" id="downloadBtn" disabled>
+              <i class="fas fa-download"></i>
+              Скачать .docx
+            </button>
+            <button class="btn btn-success" id="copyBtn" disabled>
+              <i class="fas fa-copy"></i>
+              Копировать
+            </button>
+            <button class="btn btn-secondary" id="regenerateBtn" disabled>
+              <i class="fas fa-redo"></i>
+              Обновить
+            </button>
           </div>
         </div>
       </section>
 
-      <!-- Registry (Hidden by default) -->
-      <section class="section" id="registrySection" style="display: none;">
+      <!-- Registry (Hidden) -->
+      <section class="section hidden" id="registrySection">
         <div class="section-header">
           <h3 class="section-title">
             <i class="fas fa-database"></i>
             Реестр данных
           </h3>
-          <div class="section-actions">
-            <button class="btn btn-icon btn-secondary" onclick="exportData()">
-              <i class="fas fa-file-export"></i>
-            </button>
-          </div>
         </div>
         
         <div class="section-content">
           <div class="table-wrapper" id="registryTableContainer">
             <div class="preview-empty">
-              <div class="preview-empty-icon">
-                <i class="fas fa-table"></i>
-              </div>
+              <i class="fas fa-table"></i>
               <h4>Данные не загружены</h4>
-              <p>Подключите Google Таблицу для просмотра</p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Diagnostics (Hidden by default) -->
-      <section class="section" id="diagnosticsSection" style="display: none;">
+      <!-- Diagnostics (Hidden) -->
+      <section class="section hidden" id="diagnosticsSection">
         <div class="section-header">
           <h3 class="section-title">
             <i class="fas fa-stethoscope"></i>
-            Диагностика соответствия полей
+            Диагностика соответствия
           </h3>
         </div>
         
         <div class="section-content">
-          <div class="diagnostics-grid">
-            <div class="diagnostic-card">
-              <div class="diagnostic-label">Теги в шаблоне</div>
-              <div class="diagnostic-content" id="templateTags">
-                <div class="chip">Выберите шаблон</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <div style="font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">
+                Теги в шаблоне
+              </div>
+              <div class="tags-container" id="templateTags">
+                <span class="tag">Выберите шаблон</span>
               </div>
             </div>
             
-            <div class="diagnostic-card">
-              <div class="diagnostic-label">Столбцы в таблице</div>
-              <div class="diagnostic-content" id="sheetHeaders">
-                <div class="chip">Загрузите данные</div>
+            <div>
+              <div style="font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">
+                Столбцы в таблице
+              </div>
+              <div class="tags-container" id="sheetHeaders">
+                <span class="tag">Загрузите данные</span>
               </div>
             </div>
             
-            <div class="diagnostic-card">
-              <div class="diagnostic-label">Отсутствуют в таблице</div>
-              <div class="diagnostic-content" id="missingTags">
-                <div class="chip">—</div>
+            <div>
+              <div style="font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">
+                Отсутствуют в таблице
+              </div>
+              <div class="tags-container" id="missingTags">
+                <span class="tag">—</span>
               </div>
             </div>
             
-            <div class="diagnostic-card">
-              <div class="diagnostic-label">Неиспользуемые столбцы</div>
-              <div class="diagnostic-content" id="unusedHeaders">
-                <div class="chip">—</div>
+            <div>
+              <div style="font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">
+                Неиспользуемые столбцы
               </div>
-            </div>
-          </div>
-          
-          <!-- Analytics Chart -->
-          <div style="margin-top: 2rem;">
-            <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">
-              <i class="fas fa-chart-line"></i> Статистика использования
-            </h4>
-            <div class="chart-container">
-              <canvas id="usageChart"></canvas>
+              <div class="tags-container" id="unusedHeaders">
+                <span class="tag">—</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1701,75 +1104,26 @@
     </main>
   </div>
 
-  <!-- Notification Container -->
+  <!-- Notification -->
   <div class="notification" id="notification">
-    <div class="notification-icon">
-      <i class="fas fa-check"></i>
+    <i class="notification-icon fas fa-check-circle"></i>
+    <div>
+      <div id="notificationText">Успешно!</div>
     </div>
-    <div class="notification-content">
-      <div class="notification-title" id="notificationTitle">Успешно</div>
-      <div class="notification-message" id="notificationMessage">Операция выполнена</div>
-    </div>
-  </div>
-
-  <!-- Shortcuts Modal -->
-  <div class="modal-overlay" id="shortcutsModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Горячие клавиши</h3>
-        <button class="modal-close" onclick="closeShortcuts()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-content">
-        <div style="display: grid; gap: 1rem;">
-          <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-tertiary); border-radius: var(--radius);">
-            <span>Скачать документ</span>
-            <span><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">D</kbd></span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-tertiary); border-radius: var(--radius);">
-            <span>Копировать текст</span>
-            <span><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">C</kbd></span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-tertiary); border-radius: var(--radius);">
-            <span>Обновить документ</span>
-            <span><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">R</kbd></span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-tertiary); border-radius: var(--radius);">
-            <span>Обновить данные</span>
-            <span><kbd class="kbd">F5</kbd></span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-tertiary); border-radius: var(--radius);">
-            <span>Сменить тему</span>
-            <span><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">Shift</kbd> + <kbd class="kbd">T</kbd></span>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-tertiary); border-radius: var(--radius);">
-            <span>Печать документа</span>
-            <span><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">P</kbd></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Shortcuts Hint -->
-  <div class="shortcuts-hint">
-    Нажмите <kbd class="kbd">?</kbd> для справки
   </div>
 
   <script>
-    // ===== КОНФИГУРАЦИЯ =====
+    // Конфигурация
     const CONFIG = {
       GITHUB_USER: "anatoliy031",
       GITHUB_REPO: "letter-automation",
       GITHUB_TEMPLATES_FOLDER: "templates",
       DEFAULT_GOOGLE_SHEET_ID: "17vdbh0KHIZ-lAsqFXp6HtQA-NBymV5Wh",
       AUTO_GENERATE_DELAY: 300,
-      NOTIFICATION_DURATION: 4000,
-      ANIMATION_DURATION: 300
+      NOTIFICATION_DURATION: 3000
     };
 
-    // ===== СОСТОЯНИЕ =====
+    // Состояние приложения
     const State = {
       templates: [],
       selectedTemplate: null,
@@ -1780,50 +1134,35 @@
       isLoading: false,
       documentCount: parseInt(localStorage.getItem('documentCount') || '0'),
       todayCount: parseInt(localStorage.getItem('todayCount') || '0'),
-      lastDate: localStorage.getItem('lastDate') || new Date().toDateString(),
-      theme: localStorage.getItem('theme') || 'light',
-      zoomLevel: 100,
-      generationTime: 0
+      lastDate: localStorage.getItem('lastDate') || new Date().toDateString()
     };
 
-    // ===== ЭЛЕМЕНТЫ =====
+    // Элементы DOM
     const elements = {
       // Mobile
       menuBtn: document.getElementById('menuBtn'),
       mobileOverlay: document.getElementById('mobileOverlay'),
       mobileSidebar: document.getElementById('mobileSidebar'),
+      mobileTemplateSearch: document.getElementById('mobileTemplateSearch'),
+      mobileTemplatesList: document.getElementById('mobileTemplatesList'),
       
       // Theme
       themeToggle: document.getElementById('themeToggle'),
       
-      // Status
-      statusText: document.getElementById('statusText'),
-      
-      // Stats
-      todayCount: document.getElementById('todayCount'),
-      totalRows: document.getElementById('totalRows'),
-      activeTemplate: document.getElementById('activeTemplate'),
-      genTime: document.getElementById('genTime'),
-      templateCount: document.getElementById('templateCount'),
-      usedToday: document.getElementById('usedToday'),
-      
-      // Search
+      // Templates
       templateSearch: document.getElementById('templateSearch'),
-      mobileTemplateSearch: document.getElementById('mobileTemplateSearch'),
       templatesList: document.getElementById('templatesList'),
-      mobileTemplatesList: document.getElementById('mobileTemplatesList'),
       
       // Data
       smartQuery: document.getElementById('smartQuery'),
       recordSelect: document.getElementById('recordSelect'),
       rowNumberInput: document.getElementById('rowNumberInput'),
-      matchCount: document.getElementById('matchCount'),
       refreshBtn: document.getElementById('refreshBtn'),
+      matchCount: document.getElementById('matchCount'),
       
       // Preview
-      previewDocument: document.getElementById('previewDocument'),
-      zoomSlider: document.getElementById('zoomSlider'),
-      zoomValue: document.getElementById('zoomValue'),
+      previewContent: document.getElementById('previewContent'),
+      errorMessage: document.getElementById('errorMessage'),
       downloadBtn: document.getElementById('downloadBtn'),
       copyBtn: document.getElementById('copyBtn'),
       regenerateBtn: document.getElementById('regenerateBtn'),
@@ -1839,83 +1178,18 @@
       missingTags: document.getElementById('missingTags'),
       unusedHeaders: document.getElementById('unusedHeaders'),
       
-      // Progress
-      progressBar: document.getElementById('progressBar'),
-      progressFill: document.getElementById('progressFill'),
-      
-      // Modal
-      shortcutsModal: document.getElementById('shortcutsModal'),
+      // Stats
+      todayCount: document.getElementById('todayCount'),
+      totalRows: document.getElementById('totalRows'),
+      activeTemplate: document.getElementById('activeTemplate'),
+      genTime: document.getElementById('genTime'),
       
       // Notification
       notification: document.getElementById('notification'),
-      notificationTitle: document.getElementById('notificationTitle'),
-      notificationMessage: document.getElementById('notificationMessage')
+      notificationText: document.getElementById('notificationText')
     };
 
-    // ===== ТЕМА =====
-    const Theme = {
-      init: () => {
-        document.documentElement.setAttribute('data-theme', State.theme);
-        Theme.updateIcon();
-      },
-      
-      toggle: () => {
-        State.theme = State.theme === 'light' ? 'dark' : 'light';
-        localStorage.setItem('theme', State.theme);
-        document.documentElement.setAttribute('data-theme', State.theme);
-        Theme.updateIcon();
-        showNotification('Тема изменена', `Включен ${State.theme === 'light' ? 'светлый' : 'тёмный'} режим`);
-      },
-      
-      updateIcon: () => {
-        const icon = elements.themeToggle.querySelector('i');
-        icon.className = State.theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-      }
-    };
-
-    // ===== ПРОГРЕСС БАР =====
-    const Progress = {
-      show: () => {
-        elements.progressBar.classList.add('active');
-        elements.progressFill.style.width = '0%';
-      },
-      
-      update: (percent) => {
-        elements.progressFill.style.width = `${percent}%`;
-      },
-      
-      hide: () => {
-        elements.progressFill.style.width = '100%';
-        setTimeout(() => {
-          elements.progressBar.classList.remove('active');
-        }, 300);
-      }
-    };
-
-    // ===== УВЕДОМЛЕНИЯ =====
-    function showNotification(title, message, type = 'success') {
-      elements.notificationTitle.textContent = title;
-      elements.notificationMessage.textContent = message;
-      
-      elements.notification.className = `notification notification-${type}`;
-      const icon = elements.notification.querySelector('.notification-icon i');
-      
-      if (type === 'success') {
-        icon.className = 'fas fa-check-circle';
-      } else if (type === 'error') {
-        icon.className = 'fas fa-exclamation-circle';
-      } else if (type === 'warning') {
-        icon.className = 'fas fa-exclamation-triangle';
-      }
-      
-      elements.notification.classList.add('show');
-      
-      setTimeout(() => {
-        elements.notification.classList.remove('show');
-      }, CONFIG.NOTIFICATION_DURATION);
-    }
-
-    // ===== УТИЛИТЫ =====
+    // Утилиты
     const Utils = {
       debounce: (func, wait) => {
         let timeout;
@@ -1959,652 +1233,730 @@
           Utils.makeAliases(h).forEach(alias => obj[alias] = row[i] ?? "");
         });
         return obj;
-      },
-      
-      formatTime: (ms) => {
-        if (ms < 1000) return `${ms} мс`;
-        return `${(ms / 1000).toFixed(1)} с`;
-      },
-      
-      updateStats: () => {
-        // Check if date changed
-        const today = new Date().toDateString();
-        if (State.lastDate !== today) {
-          State.todayCount = 0;
-          State.lastDate = today;
-          localStorage.setItem('lastDate', today);
-        }
-        
-        elements.todayCount.textContent = State.todayCount.toString();
-        elements.usedToday.textContent = State.todayCount.toString();
-        localStorage.setItem('todayCount', State.todayCount.toString());
-        localStorage.setItem('documentCount', State.documentCount.toString());
       }
     };
 
-    // ===== МОБИЛЬНОЕ МЕНЮ =====
-    const Mobile = {
-      init: () => {
-        elements.menuBtn.addEventListener('click', Mobile.open);
-        elements.mobileOverlay.addEventListener('click', Mobile.close);
-        
-        // Close button in mobile sidebar
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'modal-close';
-        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-        closeBtn.style.position = 'absolute';
-        closeBtn.style.top = '1rem';
-        closeBtn.style.right = '1rem';
-        closeBtn.onclick = Mobile.close;
-        elements.mobileSidebar.querySelector('.sidebar-content').appendChild(closeBtn);
-      },
+    // Уведомления
+    function showNotification(message, type = 'success') {
+      elements.notification.className = `notification notification-${type}`;
+      const icon = elements.notification.querySelector('.notification-icon');
       
-      open: () => {
-        elements.mobileOverlay.classList.add('show');
-        elements.mobileSidebar.classList.add('open');
-        document.body.style.overflow = 'hidden';
-      },
+      if (type === 'success') {
+        icon.className = 'notification-icon fas fa-check-circle';
+      } else if (type === 'error') {
+        icon.className = 'notification-icon fas fa-exclamation-circle';
+      }
       
-      close: () => {
-        elements.mobileOverlay.classList.remove('show');
-        elements.mobileSidebar.classList.remove('open');
-        document.body.style.overflow = '';
+      elements.notificationText.textContent = message;
+      elements.notification.classList.add('show');
+      
+      setTimeout(() => {
+        elements.notification.classList.remove('show');
+      }, CONFIG.NOTIFICATION_DURATION);
+    }
+
+    // Переключение секций
+    window.toggleSection = function(sectionId) {
+      const section = document.getElementById(sectionId);
+      section.classList.toggle('hidden');
+      
+      if (!section.classList.contains('hidden')) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     };
 
-    // ===== ШАБЛОНЫ =====
-    const Templates = {
-      fetch: async () => {
-        try {
-          Progress.show();
-          Progress.update(30);
-          
-          const apiUrl = `https://api.github.com/repos/${CONFIG.GITHUB_USER}/${CONFIG.GITHUB_REPO}/contents/${CONFIG.GITHUB_TEMPLATES_FOLDER}`;
-          const response = await fetch(apiUrl);
-          
-          if (!response.ok) {
-            throw new Error('Ошибка загрузки шаблонов');
-          }
-          
-          Progress.update(60);
-          
-          const files = await response.json();
-          const docxFiles = files
-            .filter(file => /\.docx$/i.test(file.name))
-            .map(file => ({
-              name: file.name,
-              url: file.download_url,
-              displayName: file.name.replace(/\.docx$/i, ''),
-              size: file.size,
-              lastUsed: localStorage.getItem(`template-${file.name}`) || null
-            }));
-          
-          State.templates = docxFiles;
-          elements.templateCount.textContent = docxFiles.length.toString();
-          
-          Progress.update(90);
-          Templates.render();
-          Progress.hide();
-          
-        } catch (error) {
-          console.error('Error fetching templates:', error);
-          Progress.hide();
-          showNotification('Ошибка', 'Не удалось загрузить шаблоны', 'error');
-        }
-      },
+    // Переключение темы
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       
-      render: () => {
-        const renderList = (container, searchQuery = '') => {
-          if (!State.templates.length) {
-            container.innerHTML = `
-              <div class="preview-empty">
-                <div class="preview-empty-icon">
-                  <i class="fas fa-inbox"></i>
-                </div>
-                <p>Шаблоны не найдены</p>
-              </div>
-            `;
-            return;
-          }
-          
-          const filtered = State.templates.filter(t =>
-            t.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-          
-          if (!filtered.length) {
-            container.innerHTML = `
-              <div class="preview-empty">
-                <div class="preview-empty-icon">
-                  <i class="fas fa-search"></i>
-                </div>
-                <p>Ничего не найдено</p>
-              </div>
-            `;
-            return;
-          }
-          
-          container.innerHTML = filtered.map((template, index) => {
-            const isActive = State.selectedTemplate?.name === template.name;
-            const sizeKB = Math.round(template.size / 1024);
-            const lastUsed = template.lastUsed ? new Date(template.lastUsed).toLocaleDateString() : 'Не использован';
-            
-            return `
-              <div class="template-card ${isActive ? 'active' : ''}" 
-                   onclick="Templates.select('${template.name}')" 
-                   title="${template.displayName}">
-                <div class="template-icon">
-                  <i class="fas fa-file-word"></i>
-                </div>
-                <div class="template-name">${template.displayName}</div>
-                <div class="template-meta">
-                  <span><i class="fas fa-weight"></i> ${sizeKB} KB</span>
-                  <span><i class="fas fa-clock"></i> ${lastUsed}</span>
-                </div>
-              </div>
-            `;
-          }).join('');
-        };
-        
-        renderList(elements.templatesList, elements.templateSearch.value);
-        renderList(elements.mobileTemplatesList, elements.mobileTemplateSearch.value);
-      },
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
       
-      select: async (templateName) => {
-        try {
-          const template = State.templates.find(t => t.name === templateName);
-          if (!template) return;
-          
-          State.selectedTemplate = template;
-          elements.activeTemplate.textContent = template.displayName;
-          
-          // Save last used
-          template.lastUsed = new Date().toISOString();
-          localStorage.setItem(`template-${template.name}`, template.lastUsed);
-          
-          Templates.render();
-          
-          if (window.matchMedia("(max-width: 768px)").matches) {
-            Mobile.close();
-          }
-          
-          await Templates.extractTags();
-          Preview.generate();
-          
-        } catch (error) {
-          console.error('Error selecting template:', error);
-          showNotification('Ошибка', 'Не удалось выбрать шаблон', 'error');
-        }
-      },
-      
-      extractTags: async () => {
-        if (!State.selectedTemplate) {
-          State.currentTags = [];
-          Diagnostics.update();
-          return;
-        }
-        
-        try {
-          const response = await fetch(State.selectedTemplate.url);
-          if (!response.ok) throw new Error('Не удалось загрузить шаблон');
-          
-          const arrayBuffer = await response.arrayBuffer();
-          const zip = new PizZip(arrayBuffer);
-          const xmlFiles = Object.keys(zip.files).filter(name => 
-            name.startsWith('word/') && name.endsWith('.xml')
-          );
-          
-          const tagSet = new Set();
-          const tagRegex = /\[\[\s*([^\]]+?)\s*\]\]/g;
-          
-          xmlFiles.forEach(fileName => {
-            try {
-              const xmlContent = zip.files[fileName].asText();
-              let match;
-              while ((match = tagRegex.exec(xmlContent)) !== null) {
-                const tag = match[1].trim().split('|')[0].trim();
-                if (tag) tagSet.add(tag);
-              }
-            } catch (e) {
-              console.warn(`Error processing ${fileName}:`, e);
-            }
-          });
-          
-          State.currentTags = Array.from(tagSet).sort();
-          Diagnostics.update();
-          
-        } catch (error) {
-          console.error('Error extracting tags:', error);
-          State.currentTags = [];
-          Diagnostics.update();
-        }
-      },
-      
-      init: () => {
-        elements.templateSearch.addEventListener('input', Templates.render);
-        elements.mobileTemplateSearch.addEventListener('input', Templates.render);
-        window.Templates = { select: Templates.select };
-      }
-    };
+      const icon = elements.themeToggle.querySelector('i');
+      icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
 
-    // ===== ДАННЫЕ =====
-    const Data = {
-      load: async () => {
-        try {
-          State.isLoading = true;
-          elements.statusText.textContent = 'Загрузка данных...';
-          elements.refreshBtn.classList.add('loading');
-          Progress.show();
-          Progress.update(20);
-          
-          const response = await fetch(
-            `https://docs.google.com/spreadsheets/d/${CONFIG.DEFAULT_GOOGLE_SHEET_ID}/export?format=csv`
-          );
-          
-          if (!response.ok) {
-            throw new Error('Не удалось загрузить таблицу');
-          }
-          
-          Progress.update(50);
-          
-          const csvText = await response.text();
-          const workbook = XLSX.read(csvText, { type: 'string' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-          
-          if (!jsonData.length) {
-            throw new Error('Таблица пустая');
-          }
-          
-          Progress.update(80);
-          
-          State.excelHeaders = jsonData[0].map(h => (h ?? "").toString().trim());
-          State.excelRows = jsonData.slice(1);
-          
-          elements.totalRows.textContent = State.excelRows.length.toString();
-          elements.statusText.textContent = 'Готов к работе';
-          
-          Registry.render();
-          Diagnostics.update();
-          Filters.refresh();
-          
-          Progress.hide();
-          showNotification('Данные загружены', `Загружено ${State.excelRows.length} записей`, 'success');
-          
-        } catch (error) {
-          console.error('Error loading data:', error);
-          State.excelHeaders = [];
-          State.excelRows = [];
-          elements.statusText.textContent = 'Ошибка загрузки';
-          Progress.hide();
-          showNotification('Ошибка', error.message, 'error');
-        } finally {
-          State.isLoading = false;
-          elements.refreshBtn.classList.remove('loading');
-        }
-      }
-    };
+    // Мобильное меню
+    function openMobileMenu() {
+      elements.mobileOverlay.classList.add('show');
+      elements.mobileSidebar.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
 
-    // ===== ФИЛЬТРЫ =====
-    const Filters = {
-      parseQuery: (query) => {
-        const tokens = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < query.length; i++) {
-          const char = query[i];
-          
-          if (char === '"' || char === '«' || char === '»') {
-            inQuotes = !inQuotes;
-            continue;
-          }
-          
-          if (!inQuotes && /\s/.test(char)) {
-            if (current.trim()) {
-              tokens.push(current.trim());
-              current = '';
-            }
-          } else {
-            current += char;
-          }
-        }
-        
-        if (current.trim()) {
-          tokens.push(current.trim());
-        }
-        
-        return tokens;
-      },
-      
-      apply: (query) => {
-        if (!State.excelRows.length) return [];
-        
-        const tokens = Filters.parseQuery(query);
-        const keyValuePairs = [];
-        const freeTextTerms = [];
-        
-        tokens.forEach(token => {
-          const equalIndex = token.indexOf('=');
-          if (equalIndex > 0) {
-            keyValuePairs.push({
-              key: token.slice(0, equalIndex).trim(),
-              value: token.slice(equalIndex + 1).trim()
-            });
-          } else {
-            freeTextTerms.push(token);
-          }
-        });
-        
-        const matchesValue = (cellValue, searchTerm) => 
-          String(cellValue ?? '').toLowerCase().includes(String(searchTerm).toLowerCase());
-        
-        const matchingIndexes = [];
-        
-        for (let i = 0; i < State.excelRows.length; i++) {
-          const row = State.excelRows[i];
-          let isMatch = true;
-          
-          // Check key-value pairs
-          for (const { key, value } of keyValuePairs) {
-            let columnIndex = State.excelHeaders.findIndex(h => 
-              Utils.makeAliases(h).map(a => a.toLowerCase()).includes(key.toLowerCase())
-            );
-            
-            if (columnIndex === -1 || !matchesValue(row[columnIndex], value)) {
-              isMatch = false;
-              break;
-            }
-          }
-          
-          if (!isMatch) continue;
-          
-          // Check free text
-          for (const term of freeTextTerms) {
-            if (!row.some(cell => matchesValue(cell, term))) {
-              isMatch = false;
-              break;
-            }
-          }
-          
-          if (isMatch) {
-            matchingIndexes.push(i);
-          }
-        }
-        
-        return matchingIndexes;
-      },
-      
-      refresh: () => {
-        const query = elements.smartQuery.value || "";
-        const matches = Filters.apply(query);
-        
-        elements.matchCount.textContent = matches.length.toString();
-        
-        // Update select
-        const options = ['<option value="">— Выберите запись из списка —</option>'];
-        
-        matches.slice(0, 500).forEach(index => {
-          const row = State.excelRows[index] || [];
-          const getValue = (field) => row[State.excelHeaders.indexOf(field)] || "";
-          
-          const name = getValue("Кому_ФИО") || getValue("ФИО") || "";
-          const branch = getValue("Филиал") || "";
-          const doc = getValue("Номер_ТУ") || getValue("Номер_документа") || "";
-          
-          const parts = [];
-          if (name) parts.push(name);
-          if (branch) parts.push(branch);
-          if (doc) parts.push(`№${doc}`);
-          
-          const label = parts.join(" • ") || `Строка ${index + 2}`;
-          options.push(`<option value="${index}">${label}</option>`);
-        });
-        
-        elements.recordSelect.innerHTML = options.join('');
-        
-        // Auto-select if only one match
-        if (matches.length === 1) {
-          elements.recordSelect.value = String(matches[0]);
-          elements.rowNumberInput.value = matches[0] + 2;
-        }
-        
-        Preview.generate();
-      },
-      
-      init: () => {
-        const debouncedRefresh = Utils.debounce(Filters.refresh, CONFIG.AUTO_GENERATE_DELAY);
-        
-        elements.smartQuery.addEventListener('input', debouncedRefresh);
-        
-        elements.recordSelect.addEventListener('change', () => {
-          const value = elements.recordSelect.value;
-          if (value !== "" && !isNaN(+value)) {
-            elements.rowNumberInput.value = (+value) + 2;
-            Preview.generate();
-          }
-        });
-        
-        elements.rowNumberInput.addEventListener('change', () => {
-          const rowNum = parseInt(elements.rowNumberInput.value, 10);
-          if (!isNaN(rowNum) && rowNum >= 2 && rowNum <= State.excelRows.length + 1) {
-            const index = rowNum - 2;
-            elements.recordSelect.value = String(index);
-            Preview.generate();
-          }
-        });
-      }
-    };
+    function closeMobileMenu() {
+      elements.mobileOverlay.classList.remove('show');
+      elements.mobileSidebar.classList.remove('open');
+      document.body.style.overflow = '';
+    }
 
-    // ===== PREVIEW =====
-    const Preview = {
-      generate: Utils.debounce(async () => {
-        const startTime = performance.now();
+    // Загрузка шаблонов
+    async function loadTemplates() {
+      try {
+        const apiUrl = `https://api.github.com/repos/${CONFIG.GITHUB_USER}/${CONFIG.GITHUB_REPO}/contents/${CONFIG.GITHUB_TEMPLATES_FOLDER}`;
+        const response = await fetch(apiUrl);
         
-        // Get selected row
-        let recordIndex = null;
-        if (elements.rowNumberInput.value) {
-          const rowNum = parseInt(elements.rowNumberInput.value, 10);
-          if (!isNaN(rowNum) && rowNum >= 2) {
-            recordIndex = rowNum - 2;
-          }
+        if (!response.ok) {
+          throw new Error('Ошибка загрузки шаблонов');
         }
         
-        if (recordIndex === null && elements.recordSelect.value) {
-          recordIndex = parseInt(elements.recordSelect.value, 10);
-        }
+        const files = await response.json();
+        State.templates = files
+          .filter(file => /\.docx$/i.test(file.name))
+          .map(file => ({
+            name: file.name,
+            url: file.download_url,
+            displayName: file.name.replace(/\.docx$/i, '')
+          }));
         
-        if (!State.selectedTemplate || recordIndex === null || isNaN(recordIndex)) {
-          Preview.showEmpty();
-          return;
-        }
+        renderTemplates();
         
-        if (recordIndex < 0 || recordIndex >= State.excelRows.length) {
-          Preview.showEmpty();
-          showNotification('Ошибка', 'Выбранная строка не существует', 'error');
-          return;
-        }
-        
-        try {
-          Preview.showLoading();
-          
-          const response = await fetch(State.selectedTemplate.url);
-          if (!response.ok) throw new Error('Не удалось загрузить шаблон');
-          
-          const arrayBuffer = await response.arrayBuffer();
-          const zip = new PizZip(arrayBuffer);
-          
-          const doc = new window.docxtemplater(zip, {
-            delimiters: { start: '[[', end: ']]' }
-          });
-          
-          const data = Utils.buildDataObject(State.excelHeaders, State.excelRows[recordIndex]);
-          doc.setData(data);
-          
-          try {
-            doc.render();
-          } catch (renderError) {
-            let details = "";
-            if (renderError.properties?.errors) {
-              details = renderError.properties.errors
-                .map(err => `• ${err.properties?.explanation || err.message || "Ошибка"}`)
-                .join("\n");
-            }
-            throw new Error("Ошибка формирования:\n" + details);
-          }
-          
-          const output = doc.getZip().generate({ type: "blob" });
-          State.lastGeneratedBlob = output;
-          
-          // Generate preview
-          const buffer = await output.arrayBuffer();
-          const result = await window.mammoth.convertToHtml({ arrayBuffer: buffer });
-          
-          const endTime = performance.now();
-          State.generationTime = Math.round(endTime - startTime);
-          elements.genTime.textContent = Utils.formatTime(State.generationTime);
-          
-          Preview.showDocument(result.value);
-          
-          // Update stats
-          State.documentCount++;
-          State.todayCount++;
-          Utils.updateStats();
-          
-          // Enable buttons
-          elements.downloadBtn.disabled = false;
-          elements.copyBtn.disabled = false;
-          elements.regenerateBtn.disabled = false;
-          
-        } catch (error) {
-          console.error('Preview generation error:', error);
-          Preview.showEmpty();
-          showNotification('Ошибка', error.message, 'error');
-        }
-      }, CONFIG.AUTO_GENERATE_DELAY),
+      } catch (error) {
+        console.error('Error loading templates:', error);
+        showNotification('Ошибка загрузки шаблонов', 'error');
+      }
+    }
+
+    // Отображение шаблонов
+    function renderTemplates(searchQuery = '') {
+      const filtered = State.templates.filter(t =>
+        t.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
       
-      showEmpty: () => {
-        elements.previewDocument.innerHTML = `
-          <div class="preview-watermark">
+      const html = filtered.length ? filtered.map(template => `
+        <div class="template-card ${State.selectedTemplate?.name === template.name ? 'active' : ''}" 
+             onclick="selectTemplate('${template.name}')">
+          <div class="template-name">
             <i class="fas fa-file-word"></i>
-            <span>Предпросмотр</span>
+            ${template.displayName}
           </div>
-          <div class="preview-empty">
-            <div class="preview-empty-icon">
-              <i class="fas fa-file-alt"></i>
-            </div>
-            <h4>Документ появится здесь</h4>
-            <p>Выберите шаблон и укажите данные для генерации</p>
+          <div class="template-meta">
+            Последнее использование: ${localStorage.getItem(`template-${template.name}`) || 'Никогда'}
           </div>
-        `;
-        elements.downloadBtn.disabled = true;
-        elements.copyBtn.disabled = true;
-        elements.regenerateBtn.disabled = true;
-      },
+        </div>
+      `).join('') : '<div class="preview-empty"><p>Шаблоны не найдены</p></div>';
       
-      showLoading: () => {
-        elements.previewDocument.innerHTML = `
-          <div class="preview-empty">
-            <div class="preview-empty-icon">
-              <i class="fas fa-spinner fa-spin"></i>
-            </div>
-            <h4>Генерация документа...</h4>
-            <p>Пожалуйста, подождите</p>
-          </div>
-        `;
-      },
+      elements.templatesList.innerHTML = html;
+      elements.mobileTemplatesList.innerHTML = html;
+    }
+
+    // Выбор шаблона
+    window.selectTemplate = async function(templateName) {
+      State.selectedTemplate = State.templates.find(t => t.name === templateName);
+      elements.activeTemplate.textContent = State.selectedTemplate.displayName;
       
-      showDocument: (html) => {
-        const watermark = `
-          <div class="preview-watermark">
-            <i class="fas fa-file-word"></i>
-            <span>${State.selectedTemplate.displayName}</span>
-          </div>
-        `;
-        
-        elements.previewDocument.innerHTML = watermark + html;
-        Preview.updateZoom();
-      },
+      localStorage.setItem(`template-${templateName}`, new Date().toLocaleDateString());
       
-      updateZoom: () => {
-        const scale = State.zoomLevel / 100;
-        elements.previewDocument.style.transform = `scale(${scale})`;
-        elements.zoomValue.textContent = `${State.zoomLevel}%`;
-      },
+      renderTemplates(elements.templateSearch.value);
+      closeMobileMenu();
       
-      download: () => {
-        if (!State.lastGeneratedBlob || !State.selectedTemplate) return;
-        
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(State.lastGeneratedBlob);
-        link.href = url;
-        
-        const rowNumber = elements.rowNumberInput.value || 
-          (elements.recordSelect.value ? parseInt(elements.recordSelect.value) + 2 : 'X');
-        
-        link.download = `${State.selectedTemplate.displayName}_строка_${rowNumber}.docx`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        
-        showNotification('Успешно', 'Документ скачан!', 'success');
-      },
+      await extractTags();
+      generatePreview();
+    };
+
+    // Извлечение тегов
+    async function extractTags() {
+      if (!State.selectedTemplate) {
+        State.currentTags = [];
+        updateDiagnostics();
+        return;
+      }
       
-      copy: async () => {
-        const content = elements.previewDocument.cloneNode(true);
-        content.querySelector('.preview-watermark')?.remove();
+      try {
+        const response = await fetch(State.selectedTemplate.url);
+        if (!response.ok) throw new Error('Не удалось загрузить шаблон');
         
-        const html = content.innerHTML;
-        const text = content.innerText || content.textContent || "";
+        const arrayBuffer = await response.arrayBuffer();
+        const zip = new PizZip(arrayBuffer);
+        const xmlFiles = Object.keys(zip.files).filter(name => 
+          name.startsWith('word/') && name.endsWith('.xml')
+        );
         
-        try {
-          const htmlBlob = new Blob([html], { type: "text/html" });
-          const textBlob = new Blob([text], { type: "text/plain" });
-          
-          await navigator.clipboard.write([new ClipboardItem({
-            "text/html": htmlBlob,
-            "text/plain": textBlob
-          })]);
-          
-          showNotification('Успешно', 'Текст скопирован в буфер обмена', 'success');
-          
-        } catch (error) {
-          // Fallback
-          const range = document.createRange();
-          range.selectNodeContents(elements.previewDocument);
-          const selection = window.getSelection();
-          selection.removeAllRanges();
-          selection.addRange(range);
-          
+        const tagSet = new Set();
+        const tagRegex = /\[\[\s*([^\]]+?)\s*\]\]/g;
+        
+        xmlFiles.forEach(fileName => {
           try {
-            document.execCommand('copy');
-            showNotification('Успешно', 'Текст скопирован', 'success');
+            const xmlContent = zip.files[fileName].asText();
+            let match;
+            while ((match = tagRegex.exec(xmlContent)) !== null) {
+              const tag = match[1].trim().split('|')[0].trim();
+              if (tag) tagSet.add(tag);
+            }
           } catch (e) {
-            showNotification('Ошибка', 'Не удалось скопировать', 'error');
+            console.warn(`Error processing ${fileName}:`, e);
           }
-          
-          selection.removeAllRanges();
-        }
-      },
-      
-      init: () => {
-        elements.downloadBtn.addEventListener('click', Preview.download);
-        elements.copyBtn.addEventListener('click', Preview.copy);
-        elements.regenerateBtn.addEventListener('click', () => Preview.generate());
-        elements.zoomSlider.addEventListener('input', (e) => {
-          State.zoomLevel = parseInt(e.target.value);
-          elements.zoomValue.textContent = `${State.zoomLevel}%`;
-          Preview.updateZoom();
         });
+        
+        State.currentTags = Array.from(tagSet).sort();
+        updateDiagnostics();
+        
+      } catch (error) {
+        console.error('Error extracting tags:', error);
+        State.currentTags = [];
+        updateDiagnostics();
       }
-    };
+    }
 
-    // ===== REGISTRY =====
-    const Registry = {
-      render: () => {
-        if (!State.excelHeaders.length) {
-          Registry.renderEmpty();
-          return;
+    // Загрузка данных
+    async function loadData() {
+      try {
+        State.isLoading = true;
+        elements.refreshBtn.classList.add('loading');
+        
+        const response = await fetch(
+          `https://docs.google.com/spreadsheets/d/${CONFIG.DEFAULT_GOOGLE_SHEET_ID}/export?format=csv`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Не удалось загрузить таблицу');
         }
         
-        let html = '<table class="data-table"><thead><tr>';
+        const csvText = await response.text();
+        const workbook = XLSX.read(csvText, { type: 'string' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        if (!jsonData.length) {
+          throw new Error('Таблица пустая');
+        }
+        
+        State.excelHeaders = jsonData[0].map(h => (h ?? "").toString().trim());
+        State.excelRows = jsonData.slice(1);
+        
+        elements.totalRows.textContent = State.excelRows.length;
+        
+        renderRegistry();
+        updateDiagnostics();
+        applyFilters();
+        
+        showNotification(`Загружено ${State.excelRows.length} записей`);
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showNotification(error.message, 'error');
+      } finally {
+        State.isLoading = false;
+        elements.refreshBtn.classList.remove('loading');
+      }
+    }
+
+    // Применение фильтров
+    function applyFilters() {
+      const query = elements.smartQuery.value || "";
+      const tokens = parseQuery(query);
+      const matches = filterRows(tokens);
+      
+      elements.matchCount.textContent = `Найдено: ${matches.length}`;
+      updateSelect(matches);
+      
+      if (matches.length === 1) {
+        elements.recordSelect.value = String(matches[0]);
+        elements.rowNumberInput.value = matches[0] + 2;
+        generatePreview();
+      }
+    }
+
+    // Парсинг запроса
+    function parseQuery(query) {
+      const tokens = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < query.length; i++) {
+        const char = query[i];
+        
+        if (char === '"') {
+          inQuotes = !inQuotes;
+          continue;
+        }
+        
+        if (!inQuotes && /\s/.test(char)) {
+          if (current.trim()) {
+            tokens.push(current.trim());
+            current = '';
+          }
+        } else {
+          current += char;
+        }
+      }
+      
+      if (current.trim()) {
+        tokens.push(current.trim());
+      }
+      
+      return tokens;
+    }
+
+    // Фильтрация строк
+    function filterRows(tokens) {
+      if (!State.excelRows.length) return [];
+      
+      const keyValuePairs = [];
+      const freeTextTerms = [];
+      
+      tokens.forEach(token => {
+        const equalIndex = token.indexOf('=');
+        if (equalIndex > 0) {
+          keyValuePairs.push({
+            key: token.slice(0, equalIndex).trim(),
+            value: token.slice(equalIndex + 1).trim()
+          });
+        } else {
+          freeTextTerms.push(token);
+        }
+      });
+      
+      const matchesValue = (cellValue, searchTerm) => 
+        String(cellValue ?? '').toLowerCase().includes(String(searchTerm).toLowerCase());
+      
+      const matchingIndexes = [];
+      
+      for (let i = 0; i < State.excelRows.length; i++) {
+        const row = State.excelRows[i];
+        let isMatch = true;
+        
+        // Check key-value pairs
+        for (const { key, value } of keyValuePairs) {
+          let columnIndex = State.excelHeaders.findIndex(h => 
+            Utils.makeAliases(h).map(a => a.toLowerCase()).includes(key.toLowerCase())
+          );
+          
+          if (columnIndex === -1 || !matchesValue(row[columnIndex], value)) {
+            isMatch = false;
+            break;
+          }
+        }
+        
+        if (!isMatch) continue;
+        
+        // Check free text
+        for (const term of freeTextTerms) {
+          if (!row.some(cell => matchesValue(cell, term))) {
+            isMatch = false;
+            break;
+          }
+        }
+        
+        if (isMatch) {
+          matchingIndexes.push(i);
+        }
+      }
+      
+      return matchingIndexes;
+    }
+
+    // Обновление select
+    function updateSelect(indexes) {
+      const options = ['<option value="">— Выберите запись —</option>'];
+      
+      indexes.slice(0, 500).forEach(index => {
+        const row = State.excelRows[index] || [];
+        const getValue = (field) => row[State.excelHeaders.indexOf(field)] || "";
+        
+        const name = getValue("Кому_ФИО") || getValue("ФИО") || "";
+        const branch = getValue("Филиал") || "";
+        const doc = getValue("Номер_ТУ") || getValue("Номер_документа") || "";
+        
+        const parts = [];
+        if (name) parts.push(name);
+        if (branch) parts.push(branch);
+        if (doc) parts.push(`№${doc}`);
+        
+        const label = parts.join(" • ") || `Строка ${index + 2}`;
+        options.push(`<option value="${index}">${label}</option>`);
+      });
+      
+      elements.recordSelect.innerHTML = options.join('');
+    }
+
+    // Генерация превью
+    const generatePreview = Utils.debounce(async function() {
+      const startTime = performance.now();
+      
+      let recordIndex = null;
+      if (elements.rowNumberInput.value) {
+        const rowNum = parseInt(elements.rowNumberInput.value, 10);
+        if (!isNaN(rowNum) && rowNum >= 2) {
+          recordIndex = rowNum - 2;
+        }
+      }
+      
+      if (recordIndex === null && elements.recordSelect.value) {
+        recordIndex = parseInt(elements.recordSelect.value, 10);
+      }
+      
+      if (!State.selectedTemplate || recordIndex === null || isNaN(recordIndex)) {
+        showEmptyPreview();
+        return;
+      }
+      
+      if (recordIndex < 0 || recordIndex >= State.excelRows.length) {
+        showError('Выбранная строка не существует');
+        showEmptyPreview();
+        return;
+      }
+      
+      try {
+        showLoadingPreview();
+        clearError();
+        
+        const response = await fetch(State.selectedTemplate.url);
+        if (!response.ok) throw new Error('Не удалось загрузить шаблон');
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const zip = new PizZip(arrayBuffer);
+        
+        const doc = new window.docxtemplater(zip, {
+          delimiters: { start: '[[', end: ']]' }
+        });
+        
+        const data = Utils.buildDataObject(State.excelHeaders, State.excelRows[recordIndex]);
+        doc.setData(data);
+        
+        try {
+          doc.render();
+        } catch (renderError) {
+          let details = "";
+          if (renderError.properties?.errors) {
+            details = renderError.properties.errors
+              .map(err => `• ${err.properties?.explanation || err.message || "Ошибка"}`)
+              .join("\n");
+          }
+          throw new Error("Ошибка формирования:\n" + details);
+        }
+        
+        const output = doc.getZip().generate({ type: "blob" });
+        State.lastGeneratedBlob = output;
+        
+        // Generate preview
+        const buffer = await output.arrayBuffer();
+        const result = await window.mammoth.convertToHtml({ arrayBuffer: buffer });
+        
+        elements.previewContent.innerHTML = result.value || '<p>Документ сгенерирован</p>';
+        
+        // Update stats
+        const endTime = performance.now();
+        elements.genTime.textContent = `${Math.round(endTime - startTime)} мс`;
+        
+        State.documentCount++;
+        State.todayCount++;
+        updateStats();
+        
+        // Enable buttons
+        elements.downloadBtn.disabled = false;
+        elements.copyBtn.disabled = false;
+        elements.regenerateBtn.disabled = false;
+        
+      } catch (error) {
+        console.error('Preview generation error:', error);
+        showError(error.message);
+        showEmptyPreview();
+      }
+    }, CONFIG.AUTO_GENERATE_DELAY);
+
+    // Показать пустое превью
+    function showEmptyPreview() {
+      elements.previewContent.innerHTML = `
+        <div class="preview-empty">
+          <i class="fas fa-file-alt"></i>
+          <h4>Документ появится здесь</h4>
+          <p>Выберите шаблон и укажите данные для генерации</p>
+        </div>
+      `;
+      elements.downloadBtn.disabled = true;
+      elements.copyBtn.disabled = true;
+      elements.regenerateBtn.disabled = true;
+    }
+
+    // Показать загрузку
+    function showLoadingPreview() {
+      elements.previewContent.innerHTML = `
+        <div class="preview-empty">
+          <i class="fas fa-spinner fa-spin"></i>
+          <h4>Генерация документа...</h4>
+        </div>
+      `;
+    }
+
+    // Показать ошибку
+    function showError(message) {
+      elements.errorMessage.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          ${message}
+        </div>
+      `;
+    }
+
+    // Очистить ошибку
+    function clearError() {
+      elements.errorMessage.innerHTML = '';
+    }
+
+    // Скачать документ
+    function downloadDocument() {
+      if (!State.lastGeneratedBlob || !State.selectedTemplate) return;
+      
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(State.lastGeneratedBlob);
+      link.href = url;
+      
+      const rowNumber = elements.rowNumberInput.value || 
+        (elements.recordSelect.value ? parseInt(elements.recordSelect.value) + 2 : 'X');
+      
+      link.download = `${State.selectedTemplate.displayName}_строка_${rowNumber}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      
+      showNotification('Документ скачан!');
+    }
+
+    // Копировать текст
+    async function copyText() {
+      const text = elements.previewContent.innerText || elements.previewContent.textContent || "";
+      
+      try {
+        await navigator.clipboard.writeText(text);
+        showNotification('Текст скопирован!');
+      } catch (error) {
+        // Fallback
+        const range = document.createRange();
+        range.selectNodeContents(elements.previewContent);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        try {
+          document.execCommand('copy');
+          showNotification('Текст скопирован!');
+        } catch (e) {
+          showNotification('Ошибка копирования', 'error');
+        }
+        
+        selection.removeAllRanges();
+      }
+    }
+
+    // Обновить реестр
+    function renderRegistry() {
+      if (!State.excelHeaders.length) {
+        elements.registryTableContainer.innerHTML = `
+          <div class="preview-empty">
+            <i class="fas fa-table"></i>
+            <h4>Данные не загружены</h4>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '<table class="data-table"><thead><tr>';
+      State.excelHeaders.forEach(header => {
+        html += `<th>${header}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+      
+      State.excelRows.forEach((row, index) => {
+        html += `<tr onclick="selectRow(${index})">`;
+        State.excelHeaders.forEach((header, columnIndex) => {
+          html += `<td>${row[columnIndex] ?? ''}</td>`;
+        });
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table>';
+      elements.registryTableContainer.innerHTML = html;
+    }
+
+    // Выбор строки из таблицы
+    window.selectRow = function(index) {
+      elements.recordSelect.value = String(index);
+      elements.rowNumberInput.value = index + 2;
+      generatePreview();
+      document.querySelector('.preview-container').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // Обновить диагностику
+    function updateDiagnostics() {
+      // Template tags
+      if (State.currentTags.length) {
+        elements.templateTags.innerHTML = State.currentTags
+          .map(tag => `<span class="tag tag-success">${tag}</span>`)
+          .join('');
+      } else {
+        elements.templateTags.innerHTML = '<span class="tag">Выберите шаблон</span>';
+      }
+      
+      // Sheet headers
+      if (State.excelHeaders.length) {
+        elements.sheetHeaders.innerHTML = State.excelHeaders
+          .map(header => `<span class="tag">${header}</span>`)
+          .join('');
+      } else {
+        elements.sheetHeaders.innerHTML = '<span class="tag">Загрузите данные</span>';
+      }
+      
+      // Missing and unused
+      if (State.currentTags.length && State.excelHeaders.length) {
+        const headerAliasMap = new Map();
+        State.excelHeaders.forEach(header => {
+          Utils.makeAliases(header).forEach(alias => {
+            headerAliasMap.set(alias, header);
+          });
+        });
+        
+        const missingTags = [];
+        const usedHeaders = new Set();
+        
+        State.currentTags.forEach(tag => {
+          const candidates = [
+            tag, 
+            tag.toLowerCase(), 
+            Utils.normalizeKey(tag), 
+            Utils.normalizeKey(tag).toLowerCase()
+          ];
+          
+          let matched = null;
+          for (const candidate of candidates) {
+            if (headerAliasMap.has(candidate)) {
+              matched = headerAliasMap.get(candidate);
+              break;
+            }
+          }
+          
+          if (!matched) {
+            missingTags.push(tag);
+          } else {
+            usedHeaders.add(matched);
+          }
+        });
+        
+        const unusedHeaders = State.excelHeaders.filter(h => !usedHeaders.has(h));
+        
+        elements.missingTags.innerHTML = missingTags.length ?
+          missingTags.map(tag => `<span class="tag tag-danger">${tag}</span>`).join('') :
+          '<span class="tag tag-success">Все найдены ✓</span>';
+        
+        elements.unusedHeaders.innerHTML = unusedHeaders.length ?
+          unusedHeaders.map(h => `<span class="tag tag-warning">${h}</span>`).join('') :
+          '<span class="tag tag-success">Все используются ✓</span>';
+      } else {
+        elements.missingTags.innerHTML = '<span class="tag">—</span>';
+        elements.unusedHeaders.innerHTML = '<span class="tag">—</span>';
+      }
+    }
+
+    // Обновить статистику
+    function updateStats() {
+      // Check if date changed
+      const today = new Date().toDateString();
+      if (State.lastDate !== today) {
+        State.todayCount = 0;
+        State.lastDate = today;
+        localStorage.setItem('lastDate', today);
+      }
+      
+      elements.todayCount.textContent = State.todayCount;
+      localStorage.setItem('todayCount', State.todayCount);
+      localStorage.setItem('documentCount', State.documentCount);
+    }
+
+    // Инициализация обработчиков
+    function initEventHandlers() {
+      // Theme toggle
+      elements.themeToggle.addEventListener('click', toggleTheme);
+      
+      // Mobile menu
+      elements.menuBtn.addEventListener('click', openMobileMenu);
+      elements.mobileOverlay.addEventListener('click', closeMobileMenu);
+      
+      // Template search
+      elements.templateSearch.addEventListener('input', (e) => renderTemplates(e.target.value));
+      elements.mobileTemplateSearch.addEventListener('input', (e) => renderTemplates(e.target.value));
+      
+      // Data refresh
+      elements.refreshBtn.addEventListener('click', loadData);
+      
+      // Filters
+      elements.smartQuery.addEventListener('input', Utils.debounce(applyFilters, 300));
+      
+      elements.recordSelect.addEventListener('change', () => {
+        const value = elements.recordSelect.value;
+        if (value !== "" && !isNaN(+value)) {
+          elements.rowNumberInput.value = (+value) + 2;
+          generatePreview();
+        }
+      });
+      
+      elements.rowNumberInput.addEventListener('change', () => {
+        const rowNum = parseInt(elements.rowNumberInput.value, 10);
+        if (!isNaN(rowNum) && rowNum >= 2) {
+          const index = rowNum - 2;
+          elements.recordSelect.value = String(index);
+          generatePreview();
+        }
+      });
+      
+      // Actions
+      elements.downloadBtn.addEventListener('click', downloadDocument);
+      elements.copyBtn.addEventListener('click', copyText);
+      elements.regenerateBtn.addEventListener('click', () => generatePreview());
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'd' && !elements.downloadBtn.disabled) {
+          e.preventDefault();
+          downloadDocument();
+        }
+        
+        if ((e.ctrlKey || e.metaKey) && e.key === 'r' && !elements.regenerateBtn.disabled) {
+          e.preventDefault();
+          generatePreview();
+        }
+        
+        if (e.key === 'F5' && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+          loadData();
+        }
+        
+        if (e.key === 'Escape') {
+          closeMobileMenu();
+        }
+      });
+    }
+
+    // Инициализация приложения
+    async function init() {
+      try {
+        // Set theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        elements.themeToggle.querySelector('i').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        
+        // Initialize event handlers
+        initEventHandlers();
+        
+        // Update stats
+        updateStats();
+        
+        // Load initial data
+        await Promise.all([
+          loadTemplates(),
+          loadData()
+        ]);
+        
+        console.log('✅ Приложение инициализировано');
+        
+      } catch (error) {
+        console.error('❌ Ошибка инициализации:', error);
+        showNotification('Ошибка инициализации', 'error');
+      }
+    }
+
+    // Запуск приложения
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
